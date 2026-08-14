@@ -18,8 +18,9 @@ Christian community platform for biblical discussion, publishing, lessons, moder
 | Framework | Next.js App Router, React 19, TypeScript |
 | Auth | Clerk |
 | Content platform | Sanity CMS + GROQ |
-| UI | Tailwind CSS, Radix UI, shadcn/ui, Lucide icons |
+| UI | Tailwind CSS v3, Radix UI, shadcn/ui, Lucide icons |
 | Editor | TipTap rich text editor |
+| Design system | LIFE forest/gold palette, Lora + Inter fonts (tokens in `app/globals.css`, typography in `app/themes.css`) |
 | AI / safety | OpenAI text and image moderation, appeals, analytics, reporting |
 | External content | YouTube Data API, Bible verse API |
 | Deployment | Vercel by default, Linux self-hosting supported |
@@ -600,6 +601,15 @@ That route reads teacher channel IDs from Sanity and then fetches recent uploads
 - To verify the setup, open `/api/youtube-feed?limit=12` and confirm the new channel's videos are included
 
 ## Changelog
+
+### LIFE design system overhaul (latest)
+
+- Replaced the legacy blue/purple theme (`#0F214A` / `#ADCFE2` / `#55189B`) with the Figma LIFE palette: forest green (`#0f2417`, `#1e4d30`, `#2d6b44`) and gold (`#c8a832`, `#e3be40`, `#f5e499`).
+- `app/globals.css` now owns all color tokens: raw LIFE brand tokens plus the shadcn/Tailwind HSL bridge tokens (`--background`, `--card`, `--primary`, `--sidebar`, etc.) for both light and dark themes. Light mode uses forest primary buttons with gold accents; dark mode uses deep green surfaces with gold primary buttons.
+- `app/themes.css` no longer defines colors; it only carries typography and surface helpers so it cannot override the active theme.
+- Brand fonts: Lora (serif, headings via `--font-heading`) and Inter (body via `--font-body`), loaded in `globals.css`.
+- The sidebar keeps the deep forest background in both themes.
+- Pending: export the LIFE logo from Figma into `public/assets/logo_light.png` and `public/assets/logo_dark.png` (referenced by `app/layout.tsx`).
 
 ## Git branches
 
