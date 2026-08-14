@@ -529,6 +529,22 @@ Important:
 | `npm run lint:fix` | Auto-fix lint issues where possible |
 | `npm run typegen` | Extract and generate Sanity schema typings |
 
+## Maintenance mode
+
+The site has a built-in maintenance mode backed by a Sanity setting, so it can be toggled without a redeploy.
+
+- **The flag:** the singleton `adminSettings` document in Sanity has a `maintenanceMode` boolean (schema in `sanity/schemaTypes/adminSettingsType.tsx`).
+- **The enforcement:** `middleware.ts` reads the flag on every page request. When `true`, non-privileged visitors are redirected to `/maintenance`, which shows the "We're under maintenance" page. API routes are not affected.
+- **Bypass roles:** signed-in users with the `admin` or `dev` role skip the redirect (`canBypassMaintenanceMode` in `lib/admin-settings.ts`). The maintenance page links to `/sign-in`, which stays reachable so privileged users can get in.
+- **Fail-open behavior:** if the Sanity lookup fails, middleware treats the flag as `false` so transient CMS issues do not take the site down.
+
+### How to enable or disable it
+
+- **Admin UI:** sign in as `admin` or `dev`, open the admin settings panel, toggle **Maintenance Mode**, and save.
+- **Sanity Studio:** open `/studio` or the Sanity manage console, edit the **Admin Settings** document, set `maintenanceMode`, and publish.
+
+The change takes effect on the next request. Use maintenance mode during deployments, schema migrations, or design rollouts that should not be publicly visible mid-flight.
+
 ## Deployment notes
 
 - Vercel is the original default host and reads `vercel.json`, but self-hosted installs can ignore that file.
