@@ -13,7 +13,7 @@ A Christian community platform for asking questions, sharing blogs, and growing 
 | **Database / CMS** | Sanity CMS (GROQ queries, no SQL) |
 | **Authentication** | Clerk (`@clerk/nextjs`) |
 | **AI / Moderation** | OpenAI GPT-4 (text + vision) |
-| **Styling** | TailwindCSS, Radix UI, shadcn/ui |
+| **Styling** | TailwindCSS v3, Radix UI, shadcn/ui; LIFE forest/gold design tokens in `app/globals.css`, typography in `app/themes.css` |
 | **Rich Text Editor** | TipTap (`@tiptap/react` + extensions) |
 | **Icons** | Lucide React |
 | **Deployment** | Vercel |
@@ -59,8 +59,8 @@ life-app/
 │   │   ├── user/                # User management (incl. guest creation)
 │   │   ├── verse-of-the-day/    # Daily verse feature
 │   │   └── webhooks/clerk/      # Clerk webhook handler (syncs users to Sanity)
-│   ├── globals.css              # Global styles
-│   ├── themes.css               # Theme variables
+│   ├── globals.css              # Color design tokens (LIFE palette, light + dark) + base styles
+│   ├── themes.css               # Typography scale, font tokens, surface helpers (no colors)
 │   └── layout.tsx               # Root HTML layout
 ├── action/                      # Server Actions (Next.js)
 │   ├── comments.ts              # Comment CRUD
@@ -462,6 +462,18 @@ Test phrases in dev mode: `test inappropriate` (block), `test flag` (flag), `tes
 ---
 
 ## Recent Updates & Fixes
+
+### LIFE Design System Overhaul (latest)
+
+- **New palette from Figma** — legacy blue/purple theme (`#0F214A` / `#ADCFE2` / `#55189B` / `#FFFD90`) replaced by the LIFE brand: forest green (`#0f2417`, `#1e4d30`, `#2d6b44`) and gold (`#c8a832`, `#e3be40`, `#f5e499`). No hardcoded old-palette hex values remain in the codebase.
+- **`app/globals.css` restructured** — owns all color tokens: raw LIFE brand tokens (hex) plus the shadcn/Tailwind HSL bridge tokens (`--background`, `--card`, `--primary`, `--sidebar`, charts, etc.) for light and dark themes. Light mode: forest primary, gold accents. Dark mode: deep green surfaces, gold primary buttons. Sidebar keeps deep forest in both themes.
+- **`app/themes.css` narrowed** — no longer defines colors (it loads after `globals.css` and previously overrode them); now only typography scale, font tokens, and `.themed-div` surface helper.
+- **Brand fonts** — Lora (serif headings, `--font-heading`) and Inter (body, `--font-body`) via Google Fonts import in `globals.css`.
+- **Tailwind v3 retained** — Figma's v4-style `@import 'tailwindcss'` was converted back to `@tailwind base/components/utilities` to match `tailwind.config.ts`.
+- **Removed legacy sidebar `!important` hacks** — sidebar now styles purely from `--sidebar-*` tokens. Watch for regressions in collapsed/icon mode.
+- **Pending assets** — `public/assets/logo_light.png` and `public/assets/logo_dark.png` (referenced by `app/layout.tsx` for favicons) still need to be exported from Figma.
+
+### Previous Updates
 
 > **Commit-ready summary:**
 >
