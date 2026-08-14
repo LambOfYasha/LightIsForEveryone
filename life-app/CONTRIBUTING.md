@@ -17,11 +17,11 @@ This project uses a branch-intent workflow. In the current checkout, the configu
 | Branch | Intended purpose | Best fit |
 | --- | --- | --- |
 | `main` | Stable integration and release branch | Reviewed, validated, deployable work |
-| `shamayah-bug` | Bug-fix branch | Regressions, broken flows, hotfixes, and tightly related follow-up updates |
-| `shamayah-new_feature` | Net-new feature branch | New routes, APIs, schemas, integrations, and product capabilities |
-| `shamayah-ui` | Visual design branch | Styling, component visuals, layout, and presentation polish |
-| `shamayah-ux` | Experience design branch | Navigation, accessibility, clarity, and user-flow improvements |
-| `shamayah-experimental` | Prototype and spike branch | Risky refactors, experiments, and idea validation |
+| `_life-bug` | Bug-fix branch | Regressions, broken flows, hotfixes, and tightly related follow-up updates |
+| `_life-new_feature` | Net-new feature branch | New routes, APIs, schemas, integrations, and product capabilities |
+| `_life-ui` | Visual design branch | Styling, component visuals, layout, and presentation polish |
+| `_life-ux` | Experience design branch | Navigation, accessibility, clarity, and user-flow improvements |
+| `_life-experimental` | Prototype and spike branch | Risky refactors, experiments, and idea validation |
 
 ## Rules for every branch
 
@@ -40,35 +40,35 @@ This project uses a branch-intent workflow. In the current checkout, the configu
 - Only merge reviewed and validated work into this branch.
 - Do not use it for spikes, temporary debugging, or unfinished experiments.
 
-### `shamayah-bug`
+### `_life-bug`
 
 - Limit changes to bug fixes, regressions, and tightly related tests or docs.
 - Start by identifying and documenting the root cause.
 - Prefer minimal diffs over opportunistic cleanup.
 - Do not bundle feature work, redesign work, or large refactors unless they are required to fix the bug safely.
 
-### `shamayah-new_feature`
+### `_life-new_feature`
 
 - Use it for new capabilities such as routes, APIs, schemas, integrations, or user-facing features.
 - Keep the feature scope explicit and avoid mixing in unrelated cleanup.
 - Update permissions, moderation paths, and setup docs when the feature touches them.
 - Call out any schema, API, or environment-variable changes in the merge summary.
 
-### `shamayah-ui`
+### `_life-ui`
 
 - Restrict changes to presentation, styling, layout, spacing, and component visuals.
 - Avoid changing business logic or data contracts unless the UI cannot function without it.
 - Preserve responsive behavior and accessibility states across desktop and mobile layouts.
 - Keep any required logic changes as small and isolated as possible.
 
-### `shamayah-ux`
+### `_life-ux`
 
 - Focus on user flow, navigation, information architecture, accessibility, copy clarity, and friction reduction.
 - Changes may span multiple screens, but should preserve permissions and core feature intent.
 - Validate key journeys such as discovery, sign-in, posting, moderation, and dashboard usage.
 - Document any intentional flow changes that contributors should know about.
 
-### `shamayah-experimental`
+### `_life-experimental`
 
 - Use it for prototypes, spikes, risky refactors, and idea validation.
 - Temporary scaffolding and breaking changes are acceptable here.
@@ -96,27 +96,27 @@ This repo currently exposes `npm run lint`, `npm run build`, `npm run build:prod
 
 ### Branch-aware validation expectations
 
-- **`shamayah-bug`**
+- **`_life-bug`**
   - Reproduce the bug before the fix when possible.
   - Verify the exact failing scenario after the fix.
   - Confirm that adjacent behavior did not regress.
 
-- **`shamayah-new_feature`**
+- **`_life-new_feature`**
   - Validate the primary happy path.
   - Check auth, role gating, empty states, and obvious error handling.
   - Note any new environment variables, schema requirements, or seed/setup steps.
 
-- **`shamayah-ui`**
+- **`_life-ui`**
   - Check desktop and mobile layouts.
   - Verify hover, focus, disabled, loading, and error states when applicable.
   - Include screenshots or visual notes in the pull request when the change is substantial.
 
-- **`shamayah-ux`**
+- **`_life-ux`**
   - Walk the full user journey affected by the change.
   - Confirm navigation clarity, copy clarity, accessibility, and reduced-friction flow.
   - Note intended behavior changes so reviewers know what is different by design.
 
-- **`shamayah-experimental`**
+- **`_life-experimental`**
   - Record what was tested and what remains intentionally unvalidated.
   - Identify any known instability, temporary scaffolding, or merge blockers.
 

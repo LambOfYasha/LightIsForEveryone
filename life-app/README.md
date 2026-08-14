@@ -179,7 +179,7 @@ VERCEL_PROJECT_PRODUCTION_URL=app.example.com
 
 ### Prerequisites
 - Node.js 20 LTS or newer
-- npm 10 or newer is recommended
+- pnpm 9 or newer (matches `vercel.json` install/build commands)
 - A Sanity project and dataset
 - A Clerk application
 - Optional but recommended: OpenAI API access and a YouTube Data API key
@@ -198,21 +198,21 @@ npm -v
 ```
 
 ### Install dependencies
-The app root is `my-app/`. Run install and deploy commands from this directory.
+The app root is `life-app/` inside the repo. Run install and deploy commands from this directory.
 
-The repo contains both `package-lock.json` and `pnpm-lock.yaml`, but `vercel.json` is wired for `npm install`, so `npm` is the safest default.
+`vercel.json` is wired for pnpm (`pnpm install --frozen-lockfile` and `pnpm run build`), so `pnpm` is the safest default.
 
 ```bash
-npm install
+pnpm install
 ```
 
 For repeatable installs on a Linux server or CI runner, prefer:
 ```bash
-npm ci
+pnpm install --frozen-lockfile
 ```
 
 ### Configure environment
-Create `my-app/.env.local` for development. For Linux production, prefer `my-app/.env.production` and keep it out of Git.
+Create `life-app/.env.local` for development. For Linux production, prefer `life-app/.env.production` and keep it out of Git.
 
 Minimum local example:
 ```bash
@@ -257,12 +257,12 @@ Then browse to `http://server-ip:3000`.
 sudo mkdir -p /srv/apps/<project-name>
 sudo chown $USER:$USER /srv/apps/<project-name>
 git clone <your-repo-url> /srv/apps/<project-name>
-cd /srv/apps/<project-name>/my-app
-npm ci
+cd /srv/apps/<project-name>/life-app
+pnpm install --frozen-lockfile
 ```
 
 ### 2. Create the production environment file
-Create `my-app/.env.production` with your production values.
+Create `life-app/.env.production` with your production values.
 
 Minimum self-hosted example:
 ```bash
@@ -310,7 +310,7 @@ After=network.target
 [Service]
 Type=simple
 User=<deploy-user>
-WorkingDirectory=/srv/apps/<project-name>/my-app
+WorkingDirectory=/srv/apps/<project-name>/life-app
 Environment=NODE_ENV=production
 ExecStart=/usr/bin/env npm run start -- --hostname 127.0.0.1 --port 3000
 Restart=always
@@ -380,7 +380,7 @@ If the server is LAN-only, use an internal CA, a self-signed certificate trusted
 For normal updates on the Linux server:
 ```bash
 git pull
-npm ci
+pnpm install --frozen-lockfile
 NODE_ENV=production npm run build
 sudo systemctl restart <project-name>
 ```
@@ -401,9 +401,9 @@ pm2 -v
 ```
 
 #### 2. Build the app
-From `my-app/`, after your production environment file is in place:
+From `life-app/`, after your production environment file is in place:
 ```bash
-npm ci
+pnpm install --frozen-lockfile
 NODE_ENV=production npm run build
 ```
 
@@ -436,7 +436,7 @@ pm2 save
 #### 6. Deploy updates with PM2
 ```bash
 git pull
-npm ci
+pnpm install --frozen-lockfile
 NODE_ENV=production npm run build
 pm2 restart <project-name> --update-env
 ```
@@ -587,25 +587,29 @@ That route reads teacher channel IDs from Sanity and then fetches recent uploads
 
 ## Git branches
 
-The local Git metadata currently shows these branches:
+The Git metadata currently shows these branches:
 
 - `main`
-- `shamayah-bug`
-- `shamayah-new_feature`
-- `shamayah-ui`
-- `shamayah-ux`
-- `shamayah-experimental`
+- `_life-bug`
+- `_life-new_feature`
+- `_life-ui`
+- `_life-ux`
+- `_life-experimental`
 
-Important context for this checkout: every local branch above currently points to the same commit (`15a4c07`) and each feature-named branch was created from `main`. That means the branch names currently describe workflow intent more than unique code snapshots.
+A legacy remote branch `shamayah-new_feature` also exists from before the `_life-*` rename. The branches currently point to the same base commit (`df44ceb`), so the branch names describe workflow intent more than unique code snapshots. Design work lands on `_life-ui` first, then is promoted to `_life-experimental` and `main` in small, reviewable chunks.
 
 | Branch | Observed role in this repo | Good use cases |
 | --- | --- | --- |
 | `main` | Baseline branch and remote tracking target | Stable integration, release candidate prep, and merge target for completed work |
-| `shamayah-bug` | Bug-fix lane created from `main` | Isolating regressions, hotfix work, and targeted QA validation |
-| `shamayah-new_feature` | Feature-development lane created from `main` | Adding routes, APIs, schemas, or other product capabilities |
-| `shamayah-ui` | UI-focused lane created from `main` | Component styling, visual refreshes, layout changes, and design system work |
-| `shamayah-ux` | UX-focused lane created from `main` | Improving flows, onboarding, navigation, discoverability, accessibility, or content ergonomics |
-| `shamayah-experimental` | Experimental lane created from `main`; also the current checked-out branch | Spikes, prototypes, riskier refactors, and validating ideas before promoting them elsewhere |
+| `_life-bug` | Bug-fix lane created from `main` | Isolating regressions, hotfix work, and targeted QA validation |
+| `_life-new_feature` | Feature-development lane created from `main` | Adding routes, APIs, schemas, or other product capabilities |
+| `_life-ui` | UI-focused lane created from `main` | Component styling, visual refreshes, layout changes, and design system work |
+| `_life-ux` | UX-focused lane created from `main` | Improving flows, onboarding, navigation, discoverability, accessibility, or content ergonomics |
+| `_life-experimental` | Experimental lane created from `main` | Spikes, prototypes, riskier refactors, and validating ideas before promoting them elsewhere |
+
+### Line endings
+
+The repo root `.gitattributes` enforces `* text=auto eol=lf`: all text files are stored and checked out with LF endings on every platform, and common image/font/media files are marked binary. This overrides any machine-level `core.autocrlf` setting, so Windows checkouts no longer flip files to CRLF.
 
 ### Contribution rules
 

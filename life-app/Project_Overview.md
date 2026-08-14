@@ -24,7 +24,7 @@ A Christian community platform for asking questions, sharing blogs, and growing 
 ## Project Structure
 
 ```
-my-app/
+life-app/
 ├── app/
 │   ├── (admin)/studio/          # Sanity Studio (CMS admin)
 │   ├── (app)/                   # Main application routes
@@ -407,15 +407,19 @@ NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
 
 ### Build & Deploy
 ```bash
-npm run build        # Standard build
-npm run build:prod   # Production build (ESLint disabled, type-check skipped)
+pnpm run build       # Standard build
+npm run build:prod   # Production build (ESLint disabled, type-check skipped; Windows shell only)
 vercel --prod        # Deploy to Vercel
 ```
 
 ### Configuration
-- `vercel.json` — Vercel deployment settings.
+- `vercel.json` — Vercel deployment settings; wired for pnpm (`pnpm install --frozen-lockfile`, `pnpm run build`), with 30s `maxDuration` for `app/api/**` routes and global security headers.
 - `next.config.ts` — Image optimization, compression, security headers, package import optimization.
 - `.eslintrc.json` — ESLint set to warnings-only for builds.
+
+### Line Endings
+- The repo root `.gitattributes` enforces `* text=auto eol=lf` for all text files and marks common image/font/media files as binary. This overrides machine-level `core.autocrlf` settings so checkouts stay LF on Windows, macOS, and Linux.
+- A root `.gitignore` excludes the local `.pnpm-store/` cache directory; `life-app/.gitignore` covers app-level artifacts (`.next/`, `.vercel`, env files, etc.).
 
 ### Post-Deployment Checklist
 1. Set all environment variables in Vercel dashboard (Production + Preview + Development).
