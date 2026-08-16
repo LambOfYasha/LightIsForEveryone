@@ -25,6 +25,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
+import Image from "next/image"
 import CreateCommunityButton from "./header/CreateCommunityButton"
 import CreateBlogButton from "./header/CreateBlogButton"
 
@@ -194,11 +195,25 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             {state === "expanded" ? (
-              <SidebarMenuButton size="lg" asChild>
-                <Link href="/"
-                className="block h-60 w-160 rounded bg-[url(/assets/sidebarlogo.png)] bg-center bg-no-repeat bg-cover"
-                aria-label="Sidebar Logo">
-            </Link>
+              <SidebarMenuButton size="lg" asChild className="h-auto">
+                <Link href="/" aria-label="Home">
+                  <Image
+                    src="/assets/logo_light.png"
+                    alt="Light Is For Everyone Logo"
+                    width={224}
+                    height={126}
+                    className="w-full h-auto rounded dark:hidden"
+                    priority
+                  />
+                  <Image
+                    src="/assets/logo_dark.png"
+                    alt="Light Is For Everyone Logo Dark"
+                    width={224}
+                    height={126}
+                    className="hidden w-full h-auto rounded dark:block"
+                    priority
+                  />
+                </Link>
               </SidebarMenuButton>
             ) : (
               <SidebarMenuButton size="lg" asChild>
