@@ -253,6 +253,11 @@ const middleware = clerkMiddleware(async (auth, req) => {
       return;
     }
 
+    // API callers expect JSON, so return 401 instead of redirecting them to an HTML sign-in page.
+    if (req.nextUrl.pathname.startsWith('/api') || req.nextUrl.pathname.startsWith('/trpc')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Build the sign-in URL on the same origin as the incoming request.
     const signInUrl = new URL('/sign-in', req.url);
     // Preserve the original destination so the app can send the user back after login.
