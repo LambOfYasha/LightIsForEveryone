@@ -15,7 +15,7 @@ export default function AppLayout({
     <ClerkProvider>
       <SettingsProvider>
         <SidebarProvider>
-          <Sidebar className="hidden md:block" collapsible="icon">
+          <Sidebar className="hidden md:block" collapsible="offcanvas">
             <AppSidebar />
           </Sidebar>
           <SidebarInset>
