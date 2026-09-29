@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
-import { client } from "@/sanity/lib/client";
-import { defineQuery } from "groq";
 import { Blog, Teacher } from "@/sanity.types";
+import { getBlogBySlug } from "@/payload/lib/blogs/queries";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,51 +35,21 @@ import { canEditContent, canDeleteContent } from "@/lib/auth/roles";
 // Force dynamic rendering to avoid static generation issues
 export const dynamic = 'force-dynamic';
 
-interface BlogWithAuthor extends Omit<Blog, 'author'> {
-  author?: Teacher;
+interface BlogWithAuthor extends Omit<Blog, 'author' | 'image'> {
+  author?: Teacher & { role?: string };
   viewCount?: number;
+  imageUrl?: string | null;
+  image?: {
+    url?: string;
+    alt?: string;
+    asset?: { url?: string; _ref?: string };
+  };
   tags?: Array<{
     _id: string;
     name: string;
     slug: string;
     color: string;
   }>;
-}
-
-async function getBlog(slug: string): Promise<BlogWithAuthor | null> {
-  const query = defineQuery(`
-    *[_type == "blog" && slug.current == $slug && (isDeleted == false || isDeleted == null)][0] {
-      _id,
-      title,
-      description,
-      "slug": slug.current,
-      content,
-      image,
-      author->{
-        _id,
-        username,
-        imageURL,
-        role
-      },
-      createdAt,
-      _createdAt,
-      "tags": tags[]->{
-        _id,
-        name,
-        "slug": slug.current,
-        color
-      }
-    }
-  `);
-
-  try {
-    const result = await client.fetch(query, { slug });
-    console.log("getBlog result:", result);
-    return result;
-  } catch (error) {
-    console.error("Error fetching blog:", error);
-    return null;
-  }
 }
 
 export default async function BlogPage({ 
@@ -90,34 +59,7 @@ export default async function BlogPage({
 }) {
   const resolvedParams = await params;
   const { slug } = resolvedParams;
-
-  // Get the blog data
-  const blogQuery = defineQuery(`
-    *[_type == "blog" && slug.current == $slug][0] {
-      _id,
-      title,
-      description,
-      content,
-      slug,
-      publishedAt,
-      _createdAt,
-      viewCount,
-      author->{
-        _id,
-        username,
-        imageURL
-      },
-      image,
-      tags[]->{
-        _id,
-        name,
-        "slug": slug.current,
-        color
-      }
-    }
-  `);
-
-  const blog = await client.fetch(blogQuery, { slug }) as BlogWithAuthor;
+  const blog = await getBlogBySlug(slug) as BlogWithAuthor | null;
 
   if (!blog) {
     notFound();
@@ -298,7 +240,7 @@ export default async function BlogPage({
           {blog.image && (
             <div className="relative w-full h-48 sm:h-64 rounded-lg overflow-hidden mb-4 sm:mb-6">
               <Image
-                src={`https://cdn.sanity.io/images/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}/${process.env.NEXT_PUBLIC_SANITY_DATASET}/${blog.image.asset?._ref?.replace('image-', '').replace('-jpg', '.jpg').replace('-png', '.png')}`}
+                src={blog.imageUrl || blog.image?.url || blog.image?.asset?.url || ""}
                 alt={blog.title || "Blog image"}
                 fill
                 className="object-cover"

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { defineQuery } from 'groq';
 import { client } from '@/sanity/lib/client';
+import { countBlogs } from '@/payload/lib/blogs/queries';
 
 export async function GET() {
   try {
@@ -16,11 +17,17 @@ export async function GET() {
 
     // Execute the query
     const stats = await client.fetch(siteStatsQuery);
+    let totalBlogs = stats.totalBlogs || 0;
+    try {
+      totalBlogs = await countBlogs();
+    } catch (error) {
+      console.error('Payload blog count failed, leaving Sanity count:', error);
+    }
 
     return NextResponse.json({
       totalQuestions: stats.totalQuestions || 0,
       totalTeachers: stats.totalTeachers || 0,
-      totalBlogs: stats.totalBlogs || 0,
+      totalBlogs,
       totalMembers: stats.totalMembers || 0
     });
 

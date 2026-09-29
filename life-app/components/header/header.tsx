@@ -82,7 +82,7 @@ function Header() {
                     {/* Admin Link - hidden on mobile */}
                     <RoleGuard permission="canAccessAdminPanel">
                         <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-                            <Link href="/admin" className="flex items-center gap-2">
+                            <Link href="/manage" className="flex items-center gap-2">
                                 <Shield className="h-4 w-4" />
                                 <span className="hidden md:inline">Admin</span>
                             </Link>

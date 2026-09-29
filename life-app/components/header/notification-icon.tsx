@@ -331,7 +331,7 @@ export default function NotificationIcon({ userId }: NotificationIconProps) {
           {notifications.length > 5 && (
             <div className="text-center pt-2">
               <Button variant="outline" size="sm" asChild>
-                <a href="/admin/advanced-moderation?tab=notifications">
+                <a href="/manage/advanced-moderation?tab=notifications">
                   View all notifications
                 </a>
               </Button>

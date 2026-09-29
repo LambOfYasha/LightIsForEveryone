@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { defineQuery } from 'groq';
 import { client } from '@/sanity/lib/client';
+import { searchBlogs } from '@/payload/lib/blogs/queries';
 
 export async function GET(request: Request) {
   try {
@@ -120,7 +121,7 @@ export async function GET(request: Request) {
 
     // Execute searches based on type filter
     if (type === 'all' || type === 'blogs' || !type) {
-      const blogs = await client.fetch(blogSearchQuery, { searchTerm, limit });
+      const blogs = await searchBlogs(searchTerm, limit);
       results.push(...blogs.map((blog: any) => ({ ...blog, searchType: 'blog' })));
     }
 

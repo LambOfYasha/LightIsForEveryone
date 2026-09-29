@@ -1,7 +1,7 @@
 'use server'
 
 import { getUser } from "@/lib/user/getUser"
-import { createBlog } from "@/sanity/lib/blogs/createBlog"
+import { createBlog } from "@/payload/lib/blogs/createBlog"
 
 export type ImageData = {
     base64: string
@@ -52,7 +52,12 @@ export async function createBlogPost(
             slug,
             description || "",
             content || "",
-            tags
+            tags,
+            {
+                username: user.username,
+                imageURL: user.imageURL,
+                role: user.role,
+            }
         )
 
         return result

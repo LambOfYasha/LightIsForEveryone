@@ -1,62 +1,35 @@
-import { defineQuery } from "groq"
-import { client } from "../client";
+import { getBlogs as loadBlogs } from '@/payload/lib/blogs/queries'
 
 export interface BlogWithAuthor {
-  _id: string;
-  title: string;
-  slug: string;
-  description: string;
-  content: any[];
-  viewCount?: number;
+  _id: string
+  title: string
+  slug: string
+  description: string
+  content: string
+  viewCount?: number
   author: {
-    _id: string;
-    username: string;
-    imageURL?: string;
-  };
-  createdAt: string;
+    _id: string
+    username: string
+    imageURL?: string
+  }
+  createdAt: string
   image?: {
-    asset: {
-      _ref: string;
-    };
-    alt?: string;
-  };
-  tags?: Array<{
-    _id: string;
-    name: string;
-    slug: string;
-    color: string;
-  }>;
-}
-
-const getBlogsQuery = defineQuery(`
-  *[_type == "blog" && (isDeleted == false || isDeleted == null)] | order(createdAt desc) {
-    _id,
-    title,
-    "slug": slug.current,
-    description,
-    content,
-    viewCount,
-    "author": author->{
-      _id,
-      username,
-      imageURL
-    },
-    createdAt,
-    image,
-    "tags": tags[]->{
-      _id,
-      name,
-      "slug": slug.current,
-      color
+    url?: string
+    alt?: string
+    asset?: {
+      _ref?: string
+      url?: string
     }
   }
-`)
-
-// Generic wrapper for client.fetch with proper typing
-async function typedClientFetch<T>(query: string): Promise<T> {
-  return client.fetch<T>(query);
+  imageUrl?: string | null
+  tags?: Array<{
+    _id: string
+    name: string
+    slug: string
+    color: string
+  }>
 }
 
 export async function getBlogs(): Promise<BlogWithAuthor[]> {
-  return typedClientFetch<BlogWithAuthor[]>(getBlogsQuery);
-} 
+  return loadBlogs() as Promise<BlogWithAuthor[]>
+}

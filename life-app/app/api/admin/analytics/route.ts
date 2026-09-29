@@ -3,6 +3,7 @@ import { defineQuery } from 'groq';
 import { adminClient } from '@/sanity/lib/adminClient';
 import { getUser } from '@/lib/user/getUser';
 import { isAdmin, isModerator } from '@/lib/auth/roles';
+import { countBlogs } from '@/payload/lib/blogs/queries';
 
 export interface AnalyticsData {
   // User Statistics
@@ -189,6 +190,12 @@ export async function GET(request: NextRequest) {
       adminClient.fetch(topCommunitiesQuery),
       adminClient.fetch(recentActivityQuery)
     ]);
+
+    try {
+      contentStats.totalBlogs = await countBlogs();
+    } catch (error) {
+      console.error('Payload blog count failed:', error);
+    }
 
     console.log("Query results:", {
       userStats,

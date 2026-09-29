@@ -1,5 +1,4 @@
-import { client } from '@/sanity/lib/client';
-import { defineQuery } from 'groq';
+import { getTags } from '@/payload/lib/tags';
 import { TagList } from '@/components/ui/tag';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,20 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 
 export default async function TagsPage() {
-  // Use the same query as the API to ensure consistency
-  const query = defineQuery(`
-    *[_type == "tag"] | order(name asc) {
-      _id,
-      name,
-      "slug": slug.current,
-      color,
-      description,
-      createdAt,
-      _createdAt
-    }
-  `);
-  
-  const tags = await client.fetch(query);
+  const tags = await getTags();
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-8">
