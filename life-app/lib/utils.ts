@@ -9,7 +9,7 @@ export function getImageUrl(imageURL: string | undefined): string | null {
   if (!imageURL) return null;
   
   // If it's already a full URL, return as is
-  if (imageURL.startsWith('http://') || imageURL.startsWith('https://')) {
+  if (imageURL.startsWith('http://') || imageURL.startsWith('https://') || imageURL.startsWith('/')) {
     return imageURL;
   }
   

@@ -12,8 +12,9 @@ import { client } from '@/sanity/lib/client';
 
 // These routes require a signed-in user before the request is allowed to continue.
 const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)', // Protect all dashboard pages and their nested routes.
-  '/admin(.*)', // Protect the entire admin area.
+  '/dashboard(.*)',
+  '/admin(.*)',
+  '/manage(.*)',
   '/api/admin(.*)', // Protect admin-only API endpoints.
   '/api/blogs(.*)', // Protect blog endpoints that live under the authenticated blog API namespace.
   '/api/communities(.*)', // Protect community endpoints by default unless a more specific guest exception matches.
@@ -83,7 +84,7 @@ function isPageRequest(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // A page request must exist and must not target API handlers, tRPC, or Next.js internals.
-  return Boolean(pathname && !pathname.startsWith('/api') && !pathname.startsWith('/trpc') && !pathname.startsWith('/_next'));
+  return Boolean(pathname && !pathname.startsWith('/api') && !pathname.startsWith('/cms-api') && !pathname.startsWith('/trpc') && !pathname.startsWith('/_next'));
 }
 
 /**
@@ -100,7 +101,7 @@ function isTopLevelPageRequest(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Ignore the homepage, APIs, tRPC, and framework internals because they are not managed page candidates.
-  if (!pathname || pathname === '/' || pathname.startsWith('/api') || pathname.startsWith('/trpc') || pathname.startsWith('/_next')) {
+  if (!pathname || pathname === '/' || pathname.startsWith('/api') || pathname.startsWith('/cms-api') || pathname.startsWith('/trpc') || pathname.startsWith('/_next')) {
     return false;
   }
 
@@ -127,14 +128,15 @@ async function getManagedPageRedirectResponse(req: NextRequest) {
   }
 
   try {
-    // Fetch the redirect rule from Sanity using the normalized slug.
-    const redirectRule = await client.fetch<ManagedPageRedirectLookup | null>(
-      managedPageRedirectLookupQuery,
-      { slug }
-    );
-
-    // If Sanity has no redirect target for this slug, the request should continue to the page component.
-    if (!redirectRule?.redirectTo) {
+    const response = await fetch(new URL(`/api/pages?slug=${encodeURIComponent(slug)}`, req.url), {
+      cache: 'no-store',
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const body = await response.json();
+    const redirectRule = body?.page as ManagedPageRedirectLookup | null;
+    if (!redirectRule?.redirectTo || (redirectRule as { routeBehavior?: string }).routeBehavior === 'render') {
       return null;
     }
 
@@ -161,15 +163,13 @@ async function getManagedPageRedirectResponse(req: NextRequest) {
  * Reads the site-wide maintenance toggle from Sanity.
  * If the lookup fails, the middleware defaults to `false` so the site stays available.
  */
-async function isMaintenanceModeEnabled() {
+async function isMaintenanceModeEnabled(req: NextRequest) {
   try {
-    // Fetch only the maintenance flag from the singleton admin settings document.
-    const settings = await client.fetch<MaintenanceModeLookup | null>(maintenanceModeLookupQuery);
-
-    // Coerce an optional value into a plain boolean for downstream checks.
+    const response = await fetch(new URL('/api/site-settings', req.url), { cache: 'no-store' });
+    if (!response.ok) return false;
+    const settings = await response.json();
     return Boolean(settings?.maintenanceMode);
   } catch (error) {
-    // Fail open so transient CMS issues do not force the site into downtime.
     console.error('Failed to read maintenance mode settings:', error);
     return false;
   }
@@ -206,7 +206,7 @@ async function getMaintenanceModeResponse(userId: string | null | undefined, req
   }
 
   // Check the global maintenance toggle before performing any additional auth-related work.
-  const maintenanceModeEnabled = await isMaintenanceModeEnabled();
+  const maintenanceModeEnabled = await isMaintenanceModeEnabled(req);
 
   // If the site is not in maintenance mode, leave the request untouched.
   if (!maintenanceModeEnabled) {

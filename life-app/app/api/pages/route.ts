@@ -7,12 +7,7 @@ import {
   getPageRedirectTargetError,
   normalizeSitePagePayload,
 } from '@/lib/pages';
-import { adminClient } from '@/sanity/lib/adminClient';
-import { getPageBySlug, getPages } from '@/sanity/lib/pages';
-
-interface ExistingPageReference {
-  _id: string;
-}
+import { createManagedPage, findPageIdBySlug, getPageBySlug, getPages } from '@/payload/lib/pages';
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,94 +42,37 @@ export async function POST(request: NextRequest) {
     const slugError = getManagedPageSlugError(payload.slug);
 
     if (!payload.title || !payload.slug) {
-      return NextResponse.json(
-        { error: 'Title and slug are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Title and slug are required' }, { status: 400 });
     }
-
     if (slugError) {
       return NextResponse.json({ error: slugError }, { status: 400 });
     }
-
     if (payload.routeBehavior === 'render' && !payload.content) {
-      return NextResponse.json(
-        { error: 'Page content is required when this route shows a page' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Page content is required when this route shows a page' }, { status: 400 });
     }
-
     if (payload.routeBehavior === 'redirect' && !payload.redirectTo) {
-      return NextResponse.json(
-        { error: 'Choose a destination page when this route redirects visitors' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Choose a destination page when this route redirects visitors' }, { status: 400 });
     }
-
     if (payload.routeBehavior === 'redirect') {
       const redirectTargetError = getPageRedirectTargetError(payload.redirectTo);
-
       if (redirectTargetError) {
         return NextResponse.json({ error: redirectTargetError }, { status: 400 });
       }
-    }
-
-    if (payload.routeBehavior === 'redirect') {
       const redirectPathname = payload.redirectTo.startsWith('/')
         ? new URL(payload.redirectTo, 'https://managed-page.local').pathname
         : null;
-
       if (redirectPathname === getPagePath(payload.slug)) {
-        return NextResponse.json(
-          { error: 'A page cannot redirect to itself' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'A page cannot redirect to itself' }, { status: 400 });
       }
     }
 
-    const existingPage = await adminClient.fetch<ExistingPageReference | null>(
-      `*[_type == "page" && slug.current == $slug][0] { _id }`,
-      { slug: payload.slug }
-    );
-
+    const existingPage = await findPageIdBySlug(payload.slug);
     if (existingPage) {
-      return NextResponse.json(
-        { error: 'A page with this slug already exists' },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: 'A page with this slug already exists' }, { status: 409 });
     }
 
-    const timestamp = new Date().toISOString();
-    const createdPage = await adminClient.create({
-      _type: 'page',
-      title: payload.title,
-      slug: {
-        _type: 'slug',
-        current: payload.slug,
-      },
-      description: payload.description,
-      content: payload.content,
-      isPublished: payload.isPublished,
-      routeBehavior: payload.routeBehavior,
-      redirectType: payload.redirectType,
-      ...(payload.routeBehavior === 'redirect' && payload.redirectTo
-        ? { redirectTo: payload.redirectTo }
-        : {}),
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    });
-
-    return NextResponse.json(
-      {
-        page: {
-          _id: createdPage._id,
-          ...payload,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        },
-      },
-      { status: 201 }
-    );
+    const page = await createManagedPage(payload);
+    return NextResponse.json({ page }, { status: 201 });
   } catch (error) {
     console.error('Error creating page:', error);
     return NextResponse.json({ error: 'Failed to create page' }, { status: 500 });

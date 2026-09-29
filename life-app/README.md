@@ -71,8 +71,8 @@ Christian community platform for biblical discussion, publishing, lessons, moder
 - `/dashboard/*` for profile, favorites, questions, blogs, notifications, and settings
 
 ### Elevated access routes
-- `/admin/*` for moderation, reports, analytics, lesson management, user and teacher management, tags, and system controls
-- `/studio` for Sanity authoring
+- `/admin` for the Payload studio (blogs, lessons, pages, media)
+- `/manage/*` for moderation, reports, analytics, lesson management, user and teacher management, tags, and system controls. Old `/admin/<section>` URLs redirect here.
 
 ### API surface
 - `app/api/search` for unified search across blogs, questions, responses, and comments
@@ -169,10 +169,27 @@ VERCEL_PROJECT_PRODUCTION_URL=app.example.com
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` must come from the same Clerk application.
 - Update Clerk allowed origins, redirect URLs, and webhook settings to match the hostname you use locally or on the Linux server.
 
+### Payload
+Blogs, lessons, lesson categories, tags, managed pages, and images are stored by Payload in Postgres. Studio is `/admin`. The teacher blog form writes HTML through Payload, not Sanity Portable Text. Clerk still signs people in.
+
+```bash
+DATABASE_URI=postgresql://life:life@localhost:5432/life
+PAYLOAD_SECRET=
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+Open `/admin` after the first boot and create a studio user. Then export the old dataset once:
+
+```bash
+pnpm migrate:sanity
+```
+
+Images leave `cdn.sanity.io` during that export. With `S3_BUCKET` or `BLOB_READ_WRITE_TOKEN` set, media goes to a bucket you control. Otherwise files are written to `life-app/media`.
+
 ### Runtime notes
 - `OPENAI_API_KEY` is optional in local development if you are okay with the built-in dev moderation fallback.
-- `YOUTUBE_API_KEY` is only required for live teacher-channel syncing; the lessons area still has Sanity and fallback content paths.
-- `SANITY_ADMIN_API_TOKEN` is required for write actions, role changes, lesson management, and Clerk-to-Sanity syncing.
+- `YOUTUBE_API_KEY` is only required for live teacher-channel syncing.
+- `SANITY_ADMIN_API_TOKEN` is still required for community writes, role changes, and Clerk-to-Sanity user syncing. It is not used for blogs, lessons, or pages.
 - `NEXT_PUBLIC_BASE_URL` should be the exact URL you use during local development, for example `http://localhost:3000`.
 - `VERCEL_PROJECT_PRODUCTION_URL` is also used for self-hosted production. Set it to the hostname only, without `https://`, because `lib/baseUrl.ts` prepends `https://` when `NODE_ENV=production`.
 
@@ -180,8 +197,9 @@ VERCEL_PROJECT_PRODUCTION_URL=app.example.com
 
 ### Prerequisites
 - Node.js 20 LTS or newer
-- pnpm 9 or newer (matches `vercel.json` install/build commands)
-- A Sanity project and dataset
+- pnpm 10 (this repo’s `pnpm-workspace.yaml` is not valid for pnpm 9)
+- Postgres for Payload (`DATABASE_URI`)
+- A Sanity project is still used for community members, comments, and Clerk profile documents
 - A Clerk application
 - Optional but recommended: OpenAI API access and a YouTube Data API key
 
@@ -528,23 +546,23 @@ Important:
 | `npm run start` | Start the production server |
 | `npm run lint` | Run linting |
 | `npm run lint:fix` | Auto-fix lint issues where possible |
-| `npm run typegen` | Extract and generate Sanity schema typings |
+| `pnpm typegen` | Generate Payload types into `payload-types.ts` |
 
 ## Maintenance mode
 
-The site has a built-in maintenance mode backed by a Sanity setting, so it can be toggled without a redeploy.
+The public maintenance flag lives in the Payload global `site-settings`, so it can be toggled without a redeploy.
 
-- **The flag:** the singleton `adminSettings` document in Sanity has a `maintenanceMode` boolean (schema in `sanity/schemaTypes/adminSettingsType.tsx`).
-- **The enforcement:** `middleware.ts` reads the flag on every page request. When `true`, non-privileged visitors are redirected to `/maintenance`, which shows the "We're under maintenance" page. API routes are not affected.
-- **Bypass roles:** signed-in users with the `admin` or `dev` role skip the redirect (`canBypassMaintenanceMode` in `lib/admin-settings.ts`). The maintenance page links to `/sign-in`, which stays reachable so privileged users can get in.
-- **Fail-open behavior:** if the Sanity lookup fails, middleware treats the flag as `false` so transient CMS issues do not take the site down.
+- **The flag:** `site-settings.maintenanceMode` in Postgres. The manage settings screen still saves the rest of the admin settings document in Sanity, and it writes this boolean to Payload at the same time.
+- **The enforcement:** `middleware.ts` reads `/api/site-settings` on page requests. When `true`, non-privileged visitors are redirected to `/maintenance`. `/api` and `/cms-api` are not redirected.
+- **Bypass roles:** signed-in users with the `admin` or `dev` role skip the redirect (`canBypassMaintenanceMode` in `lib/admin-settings.ts`). `/sign-in` stays reachable.
+- **Fail-open behavior:** if the Payload lookup fails, middleware treats the flag as `false` so a database blip does not take the site down.
 
 ### How to enable or disable it
 
-- **Admin UI:** sign in as `admin` or `dev`, open the admin settings panel, toggle **Maintenance Mode**, and save.
-- **Sanity Studio:** open `/studio` or the Sanity manage console, edit the **Admin Settings** document, set `maintenanceMode`, and publish.
+- **Admin UI:** sign in as `admin` or `dev`, open `/manage/settings`, toggle **Maintenance Mode**, and save.
+- **Payload studio:** open `/admin`, edit the **Site Settings** global, and save.
 
-The change takes effect on the next request. Use maintenance mode during deployments, schema migrations, or design rollouts that should not be publicly visible mid-flight.
+The change takes effect on the next request.
 
 ## Deployment notes
 

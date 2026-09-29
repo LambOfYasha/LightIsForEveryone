@@ -59,7 +59,7 @@ export default function CommunitySettingsButton({
         </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
-          <Link href={`/admin/communities/${communityId}`}>
+          <Link href={`/manage/communities/${communityId}`}>
             <Shield className="w-4 h-4 mr-2" />
             Manage Community
           </Link>
@@ -68,14 +68,14 @@ export default function CommunitySettingsButton({
         <DropdownMenuSeparator />
         
         <DropdownMenuItem asChild>
-          <Link href={`/admin/communities/${communityId}/members`}>
+          <Link href={`/manage/communities/${communityId}/members`}>
             <Users className="w-4 h-4 mr-2" />
             Manage Members
           </Link>
         </DropdownMenuItem>
         
         <DropdownMenuItem asChild>
-          <Link href={`/admin/communities/${communityId}/moderation`}>
+          <Link href={`/manage/communities/${communityId}/moderation`}>
             <Shield className="w-4 h-4 mr-2" />
             Moderation Tools
           </Link>

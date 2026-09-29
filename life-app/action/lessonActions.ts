@@ -2,10 +2,21 @@
 
 import { auth } from '@clerk/nextjs/server';
 import { getUser } from '@/lib/user/getUser';
-import { adminClient } from '@/sanity/lib/adminClient';
-import { client } from '@/sanity/lib/client';
-
-// ─── Types ───────────────────────────────────────────────────────────────────
+import {
+  categoryCount,
+  createLesson as createLessonDoc,
+  createLessonCategory as createCategoryDoc,
+  deleteLesson as deleteLessonDoc,
+  deleteLessonCategory as deleteCategoryDoc,
+  getLessonById as getLessonDoc,
+  lessonStats,
+  listLessonCategories,
+  listLessons,
+  listPublishedLessons,
+  updateLesson as updateLessonDoc,
+  updateLessonCategory as updateCategoryDoc,
+} from '@/payload/lib/lessons';
+import { getTags } from '@/payload/lib/tags';
 
 export interface LessonCategoryData {
   _id: string;
@@ -36,14 +47,12 @@ export interface LessonData {
   viewCount: number;
 }
 
-// ─── Auth helper ─────────────────────────────────────────────────────────────
-
 const ALLOWED_ROLES = ['admin', 'teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher', 'dev'];
 
 async function requireLessonManager() {
   const { userId } = await auth();
   if (!userId) {
-    return { error: 'Unauthorized' };
+    return { error: 'Unauthorized' as const };
   }
 
   const currentUser = await getUser();
@@ -52,30 +61,15 @@ async function requireLessonManager() {
   }
 
   if (!ALLOWED_ROLES.includes(currentUser.role)) {
-    return { error: 'Insufficient permissions' };
+    return { error: 'Insufficient permissions' as const };
   }
 
   return { user: currentUser };
 }
 
-// ─── Category CRUD ───────────────────────────────────────────────────────────
-
 export async function getLessonCategories() {
   try {
-    const categories: LessonCategoryData[] = await client.fetch(`
-      *[_type == "lessonCategory"] | order(sortOrder asc, title asc) {
-        _id,
-        title,
-        slug,
-        description,
-        sortOrder,
-        isActive,
-        createdAt,
-        updatedAt,
-        "lessonCount": count(*[_type == "lesson" && category._ref == ^._id])
-      }
-    `);
-
+    const categories = await listLessonCategories(false);
     return { success: true, categories };
   } catch (error) {
     console.error('Error fetching lesson categories:', error);
@@ -85,19 +79,7 @@ export async function getLessonCategories() {
 
 export async function getActiveLessonCategories() {
   try {
-    const categories: LessonCategoryData[] = await client.fetch(`
-      *[_type == "lessonCategory" && isActive == true] | order(sortOrder asc, title asc) {
-        _id,
-        title,
-        slug,
-        description,
-        sortOrder,
-        isActive,
-        createdAt,
-        "lessonCount": count(*[_type == "lesson" && category._ref == ^._id && isPublished == true])
-      }
-    `);
-
+    const categories = await listLessonCategories(true);
     return { success: true, categories };
   } catch (error) {
     console.error('Error fetching active lesson categories:', error);
@@ -115,37 +97,17 @@ export async function createLessonCategory(data: {
     if ('error' in authResult) {
       return { success: false, error: authResult.error };
     }
-
     if (!data.title || data.title.trim().length < 2) {
       return { success: false, error: 'Category title is required (min 2 characters)' };
     }
-
-    // Check for duplicate title
-    const existing = await adminClient.fetch(
-      `*[_type == "lessonCategory" && lower(title) == lower($title)][0]{ _id }`,
-      { title: data.title.trim() }
-    );
-
-    if (existing) {
-      return { success: false, error: 'A category with this title already exists' };
-    }
-
-    const slug = data.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-    const doc = {
-      _type: 'lessonCategory' as const,
-      title: data.title.trim(),
-      slug: { _type: 'slug' as const, current: slug },
-      description: data.description?.trim() || '',
-      sortOrder: data.sortOrder ?? 0,
-      isActive: true,
-      createdBy: { _type: 'reference' as const, _ref: authResult.user._id },
-      createdAt: new Date().toISOString(),
-    };
-
-    const created = await adminClient.create(doc);
-
-    return { success: true, message: 'Category created successfully', categoryId: created._id };
+    const created = await createCategoryDoc({
+      title: data.title,
+      description: data.description,
+      sortOrder: data.sortOrder,
+      createdById: authResult.user._id,
+    });
+    if (!created.success) return created;
+    return { success: true, message: 'Category created successfully', categoryId: created.categoryId };
   } catch (error) {
     console.error('Error creating lesson category:', error);
     return { success: false, error: 'Failed to create lesson category' };
@@ -163,44 +125,8 @@ export async function updateLessonCategory(categoryId: string, data: {
     if ('error' in authResult) {
       return { success: false, error: authResult.error };
     }
-
-    const existing = await adminClient.fetch(
-      `*[_type == "lessonCategory" && _id == $id][0]{ _id }`,
-      { id: categoryId }
-    );
-
-    if (!existing) {
-      return { success: false, error: 'Category not found' };
-    }
-
-    // Check for duplicate title if title is changing
-    if (data.title) {
-      const duplicate = await adminClient.fetch(
-        `*[_type == "lessonCategory" && lower(title) == lower($title) && _id != $id][0]{ _id }`,
-        { title: data.title.trim(), id: categoryId }
-      );
-      if (duplicate) {
-        return { success: false, error: 'A category with this title already exists' };
-      }
-    }
-
-    const updates: Record<string, unknown> = {
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (data.title !== undefined) {
-      updates.title = data.title.trim();
-      updates.slug = {
-        _type: 'slug',
-        current: data.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-      };
-    }
-    if (data.description !== undefined) updates.description = data.description.trim();
-    if (data.sortOrder !== undefined) updates.sortOrder = data.sortOrder;
-    if (data.isActive !== undefined) updates.isActive = data.isActive;
-
-    await adminClient.patch(categoryId).set(updates).commit();
-
+    const updated = await updateCategoryDoc(categoryId, data);
+    if (!updated.success) return updated;
     return { success: true, message: 'Category updated successfully' };
   } catch (error) {
     console.error('Error updating lesson category:', error);
@@ -214,27 +140,14 @@ export async function deleteLessonCategory(categoryId: string) {
     if ('error' in authResult) {
       return { success: false, error: authResult.error };
     }
-
-    // Check if category has lessons
-    const lessonCount = await adminClient.fetch(
-      `count(*[_type == "lesson" && category._ref == $id])`,
-      { id: categoryId }
-    );
-
-    if (lessonCount > 0) {
-      return { success: false, error: `Cannot delete category: it has ${lessonCount} lesson(s). Remove or reassign them first.` };
-    }
-
-    await adminClient.delete(categoryId);
-
+    const deleted = await deleteCategoryDoc(categoryId);
+    if (!deleted.success) return deleted;
     return { success: true, message: 'Category deleted successfully' };
   } catch (error) {
     console.error('Error deleting lesson category:', error);
     return { success: false, error: 'Failed to delete lesson category' };
   }
 }
-
-// ─── Lesson CRUD ─────────────────────────────────────────────────────────────
 
 export async function getLessons(filters?: {
   categoryId?: string;
@@ -244,65 +157,8 @@ export async function getLessons(filters?: {
   limit?: number;
 }) {
   try {
-    let query = `*[_type == "lesson"`;
-    const params: Record<string, unknown> = {};
-
-    if (filters?.categoryId) {
-      query += ` && category._ref == $categoryId`;
-      params.categoryId = filters.categoryId;
-    }
-
-    if (filters?.search) {
-      query += ` && (title match $search || description match $search)`;
-      params.search = `*${filters.search}*`;
-    }
-
-    if (filters?.isPublished !== undefined) {
-      query += ` && isPublished == $isPublished`;
-      params.isPublished = filters.isPublished;
-    }
-
-    query += `]`;
-    query += ` | order(sortOrder asc, createdAt desc)`;
-
-    const page = filters?.page || 1;
-    const limit = filters?.limit || 50;
-    const start = (page - 1) * limit;
-    query += ` [${start}...${start + limit}]`;
-
-    query += ` {
-      _id,
-      title,
-      slug,
-      description,
-      videoId,
-      category->{ _id, title },
-      tags[]->{ _id, name },
-      content,
-      sortOrder,
-      isPublished,
-      createdBy->{ _id, username },
-      createdAt,
-      updatedAt,
-      viewCount
-    }`;
-
-    const lessons: LessonData[] = await adminClient.fetch(query, params);
-
-    // Get total count
-    let countQuery = `count(*[_type == "lesson"`;
-    if (filters?.categoryId) countQuery += ` && category._ref == $categoryId`;
-    if (filters?.search) countQuery += ` && (title match $search || description match $search)`;
-    if (filters?.isPublished !== undefined) countQuery += ` && isPublished == $isPublished`;
-    countQuery += `])`;
-
-    const total = await adminClient.fetch(countQuery, params);
-
-    return {
-      success: true,
-      lessons,
-      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-    };
+    const listed = await listLessons(filters);
+    return { success: true, ...listed };
   } catch (error) {
     console.error('Error fetching lessons:', error);
     return { success: false, error: 'Failed to fetch lessons' };
@@ -311,23 +167,7 @@ export async function getLessons(filters?: {
 
 export async function getPublishedLessons() {
   try {
-    const lessons = await client.fetch(`
-      *[_type == "lesson" && isPublished == true] | order(sortOrder asc, createdAt desc) {
-        _id,
-        title,
-        slug,
-        description,
-        videoId,
-        category->{ _id, title },
-        tags[]->{ _id, name },
-        content,
-        sortOrder,
-        isPublished,
-        createdAt,
-        viewCount
-      }
-    `);
-
+    const lessons = await listPublishedLessons();
     return { success: true, lessons };
   } catch (error) {
     console.error('Error fetching published lessons:', error);
@@ -337,30 +177,8 @@ export async function getPublishedLessons() {
 
 export async function getLessonById(lessonId: string) {
   try {
-    const lesson = await adminClient.fetch(
-      `*[_type == "lesson" && _id == $id][0] {
-        _id,
-        title,
-        slug,
-        description,
-        videoId,
-        category->{ _id, title },
-        tags[]->{ _id, name },
-        content,
-        sortOrder,
-        isPublished,
-        createdBy->{ _id, username },
-        createdAt,
-        updatedAt,
-        viewCount
-      }`,
-      { id: lessonId }
-    );
-
-    if (!lesson) {
-      return { success: false, error: 'Lesson not found' };
-    }
-
+    const lesson = await getLessonDoc(lessonId);
+    if (!lesson) return { success: false, error: 'Lesson not found' };
     return { success: true, lesson };
   } catch (error) {
     console.error('Error fetching lesson:', error);
@@ -383,7 +201,6 @@ export async function createLesson(data: {
     if ('error' in authResult) {
       return { success: false, error: authResult.error };
     }
-
     if (!data.title || data.title.trim().length < 3) {
       return { success: false, error: 'Lesson title is required (min 3 characters)' };
     }
@@ -393,43 +210,13 @@ export async function createLesson(data: {
     if (!data.categoryId) {
       return { success: false, error: 'Category is required' };
     }
-
-    // Verify category exists
-    const categoryExists = await adminClient.fetch(
-      `*[_type == "lessonCategory" && _id == $id][0]{ _id }`,
-      { id: data.categoryId }
-    );
-    if (!categoryExists) {
-      return { success: false, error: 'Selected category does not exist' };
-    }
-
-    const slug = data.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-    const doc = {
-      _type: 'lesson' as const,
-      title: data.title.trim(),
-      slug: { _type: 'slug' as const, current: slug },
-      description: data.description?.trim() || '',
-      videoId: data.videoId.trim(),
-      category: { _type: 'reference' as const, _ref: data.categoryId },
-      content: data.content?.trim() || '',
-      sortOrder: data.sortOrder ?? 0,
-      isPublished: data.isPublished ?? true,
-      createdBy: { _type: 'reference' as const, _ref: authResult.user._id },
-      createdAt: new Date().toISOString(),
-      viewCount: 0,
-      ...(data.tagIds && data.tagIds.length > 0 ? {
-        tags: data.tagIds.map(id => ({
-          _type: 'reference' as const,
-          _ref: id,
-          _key: id,
-        })),
-      } : {}),
-    };
-
-    const created = await adminClient.create(doc);
-
-    return { success: true, message: 'Lesson created successfully', lessonId: created._id };
+    const created = await createLessonDoc({
+      ...data,
+      createdById: authResult.user._id,
+      createdByUsername: authResult.user.username,
+    });
+    if (!created.success) return created;
+    return { success: true, message: 'Lesson created successfully', lessonId: created.lessonId };
   } catch (error) {
     console.error('Error creating lesson:', error);
     return { success: false, error: 'Failed to create lesson' };
@@ -451,45 +238,8 @@ export async function updateLesson(lessonId: string, data: {
     if ('error' in authResult) {
       return { success: false, error: authResult.error };
     }
-
-    const existing = await adminClient.fetch(
-      `*[_type == "lesson" && _id == $id][0]{ _id }`,
-      { id: lessonId }
-    );
-    if (!existing) {
-      return { success: false, error: 'Lesson not found' };
-    }
-
-    const updates: Record<string, unknown> = {
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (data.title !== undefined) {
-      updates.title = data.title.trim();
-      updates.slug = {
-        _type: 'slug',
-        current: data.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-      };
-    }
-    if (data.description !== undefined) updates.description = data.description.trim();
-    if (data.videoId !== undefined) updates.videoId = data.videoId.trim();
-    if (data.categoryId !== undefined) {
-      updates.category = { _type: 'reference', _ref: data.categoryId };
-    }
-    if (data.content !== undefined) updates.content = data.content.trim();
-    if (data.sortOrder !== undefined) updates.sortOrder = data.sortOrder;
-    if (data.isPublished !== undefined) updates.isPublished = data.isPublished;
-
-    if (data.tagIds !== undefined) {
-      updates.tags = data.tagIds.map(id => ({
-        _type: 'reference',
-        _ref: id,
-        _key: id,
-      }));
-    }
-
-    await adminClient.patch(lessonId).set(updates).commit();
-
+    const updated = await updateLessonDoc(lessonId, data);
+    if (!updated.success) return updated;
     return { success: true, message: 'Lesson updated successfully' };
   } catch (error) {
     console.error('Error updating lesson:', error);
@@ -503,17 +253,8 @@ export async function deleteLesson(lessonId: string) {
     if ('error' in authResult) {
       return { success: false, error: authResult.error };
     }
-
-    const existing = await adminClient.fetch(
-      `*[_type == "lesson" && _id == $id][0]{ _id }`,
-      { id: lessonId }
-    );
-    if (!existing) {
-      return { success: false, error: 'Lesson not found' };
-    }
-
-    await adminClient.delete(lessonId);
-
+    const deleted = await deleteLessonDoc(lessonId);
+    if (!deleted.success) return deleted;
     return { success: true, message: 'Lesson deleted successfully' };
   } catch (error) {
     console.error('Error deleting lesson:', error);
@@ -521,19 +262,9 @@ export async function deleteLesson(lessonId: string) {
   }
 }
 
-// ─── Stats ───────────────────────────────────────────────────────────────────
-
 export async function getLessonStats() {
   try {
-    const stats = await client.fetch(`{
-      "totalLessons": count(*[_type == "lesson"]),
-      "publishedLessons": count(*[_type == "lesson" && isPublished == true]),
-      "draftLessons": count(*[_type == "lesson" && isPublished != true]),
-      "totalCategories": count(*[_type == "lessonCategory"]),
-      "activeCategories": count(*[_type == "lessonCategory" && isActive == true]),
-      "totalViews": math::sum(*[_type == "lesson"].viewCount)
-    }`);
-
+    const stats = await lessonStats();
     return { success: true, stats };
   } catch (error) {
     console.error('Error fetching lesson stats:', error);
@@ -541,19 +272,9 @@ export async function getLessonStats() {
   }
 }
 
-// ─── Tags helper ─────────────────────────────────────────────────────────────
-
 export async function getAvailableTags() {
   try {
-    const tags = await client.fetch(`
-      *[_type == "tag"] | order(name asc) {
-        _id,
-        name,
-        slug,
-        color
-      }
-    `);
-
+    const tags = await getTags();
     return { success: true, tags };
   } catch (error) {
     console.error('Error fetching tags:', error);
@@ -561,22 +282,16 @@ export async function getAvailableTags() {
   }
 }
 
-// ─── Seed from hardcoded data ────────────────────────────────────────────────
-
 export async function seedLessonsFromHardcoded() {
   try {
     const authResult = await requireLessonManager();
     if ('error' in authResult) {
       return { success: false, error: authResult.error };
     }
-
-    // Only allow admin/dev to seed
     if (!['admin', 'dev'].includes(authResult.user.role)) {
       return { success: false, error: 'Only admin/dev can seed data' };
     }
-
-    // Check if already seeded
-    const existingCount = await adminClient.fetch(`count(*[_type == "lessonCategory"])`);
+    const existingCount = await categoryCount();
     if (existingCount > 0) {
       return { success: false, error: 'Data already seeded. Delete existing categories first.' };
     }
@@ -624,40 +339,26 @@ export async function seedLessonsFromHardcoded() {
     ];
 
     let totalLessons = 0;
-
     for (const cat of hardcodedCategories) {
-      const slug = cat.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-      const createdCat = await adminClient.create({
-        _type: 'lessonCategory' as const,
+      const createdCat = await createCategoryDoc({
         title: cat.title,
-        slug: { _type: 'slug' as const, current: slug },
-        description: '',
         sortOrder: cat.sortOrder,
-        isActive: true,
-        createdBy: { _type: 'reference' as const, _ref: authResult.user._id },
-        createdAt: new Date().toISOString(),
+        createdById: authResult.user._id,
       });
-
+      if (!createdCat.success) return createdCat;
       for (let i = 0; i < cat.lessons.length; i++) {
         const lesson = cat.lessons[i];
-        const lessonSlug = lesson.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-        await adminClient.create({
-          _type: 'lesson' as const,
+        const createdLesson = await createLessonDoc({
           title: lesson.title,
-          slug: { _type: 'slug' as const, current: lessonSlug },
           description: lesson.description,
           videoId: lesson.videoId,
-          category: { _type: 'reference' as const, _ref: createdCat._id },
-          content: '',
+          categoryId: createdCat.categoryId,
           sortOrder: i,
           isPublished: true,
-          createdBy: { _type: 'reference' as const, _ref: authResult.user._id },
-          createdAt: new Date().toISOString(),
-          viewCount: 0,
+          createdById: authResult.user._id,
+          createdByUsername: authResult.user.username,
         });
-
+        if (!createdLesson.success) return createdLesson;
         totalLessons++;
       }
     }

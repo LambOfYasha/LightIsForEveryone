@@ -1,4 +1,23 @@
 import type { NextConfig } from "next";
+import { withPayload } from "@payloadcms/next/withPayload";
+
+const consolePrefixes = [
+  "advanced-moderation",
+  "analytics",
+  "blogs",
+  "communities",
+  "feedback",
+  "help-tickets",
+  "lessons",
+  "moderation",
+  "pages",
+  "reports",
+  "settings",
+  "tags",
+  "teachers",
+  "testing",
+  "users",
+];
 
 const nextConfig: NextConfig = {
   images: {
@@ -12,26 +31,35 @@ const nextConfig: NextConfig = {
         hostname: 'cdn.sanity.io',
       },
     ],
+    localPatterns: [
+      { pathname: '/cms-api/media/file/**' },
+      { pathname: '/assets/**' },
+    ],
   },
-  // Optimize for production
+  async redirects() {
+    return [
+      { source: '/studio', destination: '/admin', permanent: false },
+      { source: '/studio/:path*', destination: '/admin/:path*', permanent: false },
+      ...consolePrefixes.flatMap((prefix) => [
+        { source: `/admin/${prefix}`, destination: `/manage/${prefix}`, permanent: false },
+        { source: `/admin/${prefix}/:path*`, destination: `/manage/${prefix}/:path*`, permanent: false },
+      ]),
+    ];
+  },
   compress: true,
   poweredByHeader: false,
-  // Disable ESLint during build for deployment
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Disable TypeScript type checking during build
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Enable static optimization where possible
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
-  // Ensure proper handling of environment variables
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-};
+} as NextConfig;
 
-export default nextConfig;
+export default withPayload(nextConfig);

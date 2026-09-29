@@ -21,8 +21,11 @@ interface Blog {
   description: string;
   content: string | any[];
   image?: {
-    asset: {
-      _ref: string;
+    url?: string;
+    alt?: string;
+    asset?: {
+      _ref?: string;
+      url?: string;
     };
   };
   tags?: Array<{

@@ -1,213 +1,73 @@
 'use server';
 
-import { defineQuery } from "groq"
-import { adminClient } from "@/sanity/lib/adminClient"
-import { client } from "@/sanity/lib/client"
-import { getUser } from "@/lib/user/getUser"
-import { currentUser } from "@clerk/nextjs/server"
+import { getUser } from "@/lib/user/getUser";
+import { getPayloadClient } from "@/payload/lib/client";
+import { getBlogById } from "@/payload/lib/blogs/queries";
 import { cleanupFavoritesForDeletedPost, cleanupAllCommentsForDeletedPost } from "./embeddedComments";
 
+const TEACHER_ROLES = ["teacher", "junior_teacher", "senior_teacher", "lead_teacher", "admin"];
+
 export async function deleteBlog(blogId: string) {
-    console.log("=== DELETE BLOG FUNCTION ENTRY ===");
-    console.log("BlogId received:", blogId);
-    
     try {
-        console.log("=== DELETE BLOG DEBUG START ===");
-        console.log("Starting deleteBlog with blogId:", blogId);
-        
-        // Check if admin token is available
-        if (!process.env.SANITY_ADMIN_API_TOKEN) {
-            console.error("SANITY_ADMIN_API_TOKEN is not set");
-            return { error: "Admin token not configured" };
-        }
-
-        console.log("Admin token is available");
-        console.log("Project ID:", process.env.NEXT_PUBLIC_SANITY_PROJECT_ID);
-        console.log("Dataset:", process.env.NEXT_PUBLIC_SANITY_DATASET);
-
         const user = await getUser();
-        console.log("User result:", user);
-
         if ("error" in user) {
-            console.error("User error:", user.error);
             return { error: user.error };
         }
 
-        // Check if user has permission to delete this blog
-        const blogQuery = defineQuery(`
-            *[_type == "blog" && _id == $blogId][0] {
-                _id,
-                author->{_id},
-                title
-            }
-        `);
-
-        console.log("Fetching blog with ID:", blogId);
-        const blog = await adminClient.fetch(blogQuery, { blogId });
-
-        console.log("Blog query result:", blog);
-
+        const blog = await getBlogById(blogId);
         if (!blog) {
-            console.error("Blog not found with ID:", blogId);
-            // Try to find the blog with a broader query to debug
-            try {
-                const debugQuery = defineQuery(`
-                    *[_type == "blog" && _id == $blogId] {
-                        _id,
-                        _type,
-                        title,
-                        isDeleted
-                    }
-                `);
-                const debugResult = await client.fetch(debugQuery, { blogId });
-                console.log("Debug query result:", debugResult);
-                
-                if (debugResult && debugResult.length > 0) {
-                    const foundBlog = debugResult[0];
-                    console.log("Found blog but it might be deleted:", foundBlog);
-                    
-                    if (foundBlog.isDeleted) {
-                        console.log("Blog is already soft-deleted");
-                        return { success: true, message: "Blog was already deleted" };
-                    } else {
-                        return { error: "Blog not found or has been deleted" };
-                    }
-                }
-            } catch (debugError) {
-                console.error("Debug query also failed:", debugError);
-            }
             return { error: "Blog not found" };
         }
+        if (blog.isDeleted) {
+            return { success: true, message: "Blog was already deleted" };
+        }
 
-        console.log("Blog author ID:", blog.author?._id);
-        console.log("Current user ID:", user._id);
-        console.log("Current user role:", user.role);
-
-        // Check if user is the author or an admin/teacher
-        if (blog.author?._id !== user._id && user.role !== "admin" && user.role !== "teacher" && user.role !== "junior_teacher" && user.role !== "senior_teacher" && user.role !== "lead_teacher") {
-            console.error("User does not have permission to delete this blog");
+        const isStaff = TEACHER_ROLES.includes(user.role);
+        if (blog.author?._id !== user._id && !isStaff) {
             return { error: "You don't have permission to delete this blog" };
         }
 
-        // Junior teachers can only delete member content, not teacher content
-        if (user.role === "junior_teacher" && blog.author?.role && ["teacher", "junior_teacher", "senior_teacher", "lead_teacher"].includes(blog.author.role)) {
-            console.error("Junior teachers cannot delete teacher content");
+        if (
+            user.role === "junior_teacher" &&
+            blog.author?.role &&
+            ["teacher", "junior_teacher", "senior_teacher", "lead_teacher"].includes(blog.author.role) &&
+            blog.author?._id !== user._id
+        ) {
             return { error: "Junior teachers cannot delete content from other teachers" };
         }
 
-        console.log("Permission check passed, proceeding with deletion");
-
-        console.log("Deleting blog with ID:", blogId);
-        
-        // Clean up favorites before deleting the blog
-        console.log("Cleaning up favorites for blog:", blogId);
         const cleanupResult = await cleanupFavoritesForDeletedPost(blogId);
         if ("error" in cleanupResult) {
             console.warn("Warning: Failed to cleanup favorites:", cleanupResult.error);
-        } else {
-            console.log(`Cleaned up ${cleanupResult.cleanedCount} favorites for blog:`, blogId);
         }
-
-        // Clean up all comments (both embedded and separate)
-        console.log("Cleaning up all comments for blog:", blogId);
-        const commentCleanupResult = await cleanupAllCommentsForDeletedPost(blogId, 'blog');
+        const commentCleanupResult = await cleanupAllCommentsForDeletedPost(blogId, "blog");
         if ("error" in commentCleanupResult) {
             console.warn("Warning: Failed to cleanup comments:", commentCleanupResult.error);
-        } else {
-            console.log("Successfully cleaned up all comments for blog:", blogId);
-        }
-        
-        // Soft delete the blog (mark as deleted instead of hard delete)
-        console.log("Soft deleting blog with ID:", blogId);
-        try {
-            const softDeleteResult = await adminClient
-                .patch(blogId)
-                .set({
-                    isDeleted: true,
-                    deletedAt: new Date().toISOString(),
-                    deletedBy: user._id
-                })
-                .commit();
-            
-            console.log("Soft delete result:", softDeleteResult);
-            
-            if (!softDeleteResult) {
-                console.error("Soft delete operation returned null/undefined");
-                return { error: "Delete operation failed - no result returned" };
-            }
-            
-            console.log("Soft delete operation completed successfully");
-        } catch (deleteError) {
-            console.error("Error during soft deletion:", deleteError);
-            console.error("Error type:", typeof deleteError);
-            console.error("Error message:", deleteError instanceof Error ? deleteError.message : String(deleteError));
-            
-            if (deleteError instanceof Error) {
-                if (deleteError.message.includes("not found")) {
-                    return { error: "Blog not found or already deleted" };
-                }
-                if (deleteError.message.includes("referenced")) {
-                    return { error: "Cannot delete blog with existing references" };
-                }
-                if (deleteError.message.includes("permission")) {
-                    return { error: "Permission denied - please check your access rights" };
-                }
-                if (deleteError.message.includes("token")) {
-                    return { error: "Authentication failed - please check your Sanity token" };
-                }
-                if (deleteError.message.includes("network")) {
-                    return { error: "Network error - please check your connection" };
-                }
-            }
-            return { error: "Failed to delete blog - please try again" };
         }
 
-        console.log("=== DELETE BLOG DEBUG END ===");
+        const payload = await getPayloadClient();
+        await payload.update({
+            collection: "blogs",
+            id: blogId,
+            data: {
+                isDeleted: true,
+                deletedAt: new Date().toISOString(),
+                deletedBy: user._id,
+            },
+            overrideAccess: true,
+        });
+
         return { success: true };
     } catch (error) {
-        console.error("=== DELETE BLOG ERROR ===");
         console.error("Failed to delete blog:", error);
-        console.error("Error type:", typeof error);
-        console.error("Error message:", error instanceof Error ? error.message : String(error));
-        console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
-        console.error("=== END ERROR ===");
-        
-        // Provide more specific error messages
-        if (error instanceof Error) {
-            if (error.message.includes("token")) {
-                return { error: "Authentication failed - please check your permissions" };
-            }
-            if (error.message.includes("not found")) {
-                return { error: "Blog not found or already deleted" };
-            }
-            if (error.message.includes("permission")) {
-                return { error: "You don't have permission to delete this blog" };
-            }
-            if (error.message.includes("network")) {
-                return { error: "Network error - please check your connection" };
-            }
-            if (error.message.includes("referenced")) {
-                return { error: "Cannot delete blog with existing references - please try again" };
-            }
-        }
-        
         return { error: "Failed to delete blog - please try again" };
     }
 }
 
-// New server action that can be called directly from client components
 export async function deleteBlogAction(blogId: string) {
-    console.log("=== DELETE BLOG ACTION CALLED ===");
-    console.log("deleteBlogAction called with blog ID:", blogId);
-    
     const result = await deleteBlog(blogId);
-    console.log("Delete result:", result);
-    
     if ("error" in result) {
-        console.error("Delete blog error:", result.error);
         throw new Error(result.error);
     }
-    
-    console.log("Delete successful");
     return result;
-} 
+}

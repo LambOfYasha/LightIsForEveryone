@@ -10,6 +10,7 @@ import {
 } from '@/lib/admin-settings';
 import { getUser } from '@/lib/user/getUser';
 import { isAdmin } from '@/lib/auth/roles';
+import { getMaintenanceMode, setMaintenanceMode } from '@/payload/lib/pages';
 
 interface PersistedAdminSettingsDocument extends AdminSettings {
   _id: string;
@@ -40,10 +41,12 @@ export async function GET(request: NextRequest) {
     // Get settings from Sanity (or return default settings)
     const settingsQuery = `*[_type == "adminSettings"][0]`;
     const settings = await client.fetch<PersistedAdminSettingsDocument | null>(settingsQuery);
+    const safe = getClientSafeAdminSettings(settings);
+    safe.maintenanceMode = await getMaintenanceMode();
 
     return NextResponse.json({
       success: true,
-      settings: getClientSafeAdminSettings(settings)
+      settings: safe
     });
 
   } catch (error) {
@@ -129,6 +132,11 @@ export async function PATCH(request: NextRequest) {
       });
 
       updatedSettings = createdSettings as unknown as PersistedAdminSettingsDocument;
+    }
+
+    if (typeof normalizedSettings.maintenanceMode === 'boolean') {
+      await setMaintenanceMode(normalizedSettings.maintenanceMode);
+      updatedSettings = { ...updatedSettings, maintenanceMode: normalizedSettings.maintenanceMode };
     }
 
     console.log("Settings updated:", section);

@@ -1,16 +1,17 @@
 'use server';
 
-import { defineQuery } from "groq";
-import { adminClient } from "@/sanity/lib/adminClient";
-import { client } from "@/sanity/lib/client";
 import { getUser } from "@/lib/user/getUser";
-import { currentUser } from "@clerk/nextjs/server";
+import { getPayloadClient } from "@/payload/lib/client";
+import { getBlogById } from "@/payload/lib/blogs/queries";
+import { mapBlog } from "@/payload/lib/blogs/mapBlog";
 
 export type ImageData = {
     base64: string;
     fileName: string;
     contentType: string;
 } | null;
+
+const TEACHER_ROLES = ["teacher", "junior_teacher", "senior_teacher", "lead_teacher", "admin"];
 
 export async function editBlog(
     blogId: string,
@@ -23,106 +24,80 @@ export async function editBlog(
 ) {
     try {
         const user = await getUser();
-
         if ("error" in user) {
             return { error: user.error };
         }
 
-        // Check if user has permission to edit this blog
-        const blogQuery = defineQuery(`
-            *[_type == "blog" && _id == $blogId][0] {
-                _id,
-                author->{_id},
-                title,
-                slug
-            }
-        `);
-
-        const blog = await client.fetch(blogQuery, { blogId });
-
-        if (!blog) {
+        const blog = await getBlogById(blogId);
+        if (!blog || blog.isDeleted) {
             return { error: "Blog not found" };
         }
 
-        // Check if user is the author or an admin/teacher
-        if (blog.author?._id !== user._id && user.role !== "admin" && user.role !== "teacher" && user.role !== "junior_teacher" && user.role !== "senior_teacher" && user.role !== "lead_teacher") {
+        const isStaff = TEACHER_ROLES.includes(user.role);
+        if (blog.author?._id !== user._id && !isStaff) {
             return { error: "You don't have permission to edit this blog" };
         }
 
-        // Junior teachers can only edit member content, not teacher content
-        if (user.role === "junior_teacher" && blog.author?._id !== user._id && blog.author?.role && ["teacher", "junior_teacher", "senior_teacher", "lead_teacher"].includes(blog.author.role)) {
+        if (
+            user.role === "junior_teacher" &&
+            blog.author?._id !== user._id &&
+            blog.author?.role &&
+            ["teacher", "junior_teacher", "senior_teacher", "lead_teacher"].includes(blog.author.role)
+        ) {
             return { error: "Junior teachers cannot edit content from other teachers" };
         }
 
-        // Check if new slug conflicts with existing blogs (excluding current blog)
-        if (slug !== blog.slug?.current) {
-            const checkSlugQuery = defineQuery(`
-                *[_type == "blog" && slug.current == $slug && _id != $blogId][0] {
-                    _id
-                }
-            `);
-
-            const existingSlug = await client.fetch(checkSlugQuery, { slug, blogId });
-
-            if (existingSlug) {
+        const payload = await getPayloadClient();
+        if (slug !== blog.slug) {
+            const existingSlug = await payload.find({
+                collection: "blogs",
+                where: { slug: { equals: slug } },
+                limit: 1,
+                overrideAccess: true,
+            });
+            if (existingSlug.docs[0] && String(existingSlug.docs[0].id) !== blogId) {
                 return { error: "A blog with this URL already exists" };
             }
         }
 
-        // Upload new image if provided
-        let imageAsset;
-        if (imageData) {
-            try {
-                const base64Data = imageData.base64.split(",")[1];
-                const buffer = Buffer.from(base64Data, "base64");
-
-                imageAsset = await adminClient.assets.upload("image", buffer, {
-                    filename: imageData.fileName,
-                    contentType: imageData.contentType,
-                });
-            } catch (error) {
-                console.error("Failed to upload image:", error);
-                return { error: "Failed to upload image" };
-            }
-        }
-
-        // Update the blog
-        const updateData: any = {
+        const data: Record<string, unknown> = {
             title,
             description,
-            slug: {
-                current: slug,
-                _type: "slug",
-            },
-            content: content,
+            slug,
+            content,
         };
 
-        // Add tags if provided
         if (tags) {
-            updateData.tags = tags.map(tagId => ({
-                _type: "reference",
-                _ref: tagId,
-            }));
+            data.tags = tags;
         }
 
-        if (imageAsset) {
-            updateData.image = {
-                _type: "image",
-                asset: {
-                    _type: "reference",
-                    _ref: imageAsset._id,
+        if (imageData) {
+            const base64Data = imageData.base64.includes(",") ? imageData.base64.split(",")[1] : imageData.base64;
+            const buffer = Buffer.from(base64Data, "base64");
+            const media = await payload.create({
+                collection: "media",
+                data: { alt: title },
+                file: {
+                    data: buffer,
+                    mimetype: imageData.contentType || "image/jpeg",
+                    name: imageData.fileName || "cover.jpg",
+                    size: buffer.length,
                 },
-            };
+                overrideAccess: true,
+            });
+            data.cover = media.id;
         }
 
-        const updatedBlog = await adminClient
-            .patch(blogId)
-            .set(updateData)
-            .commit();
+        const updated = await payload.update({
+            collection: "blogs",
+            id: blogId,
+            data,
+            overrideAccess: true,
+        });
 
-        return { success: true, blog: updatedBlog };
+        return { success: true, blog: mapBlog(updated) };
     } catch (error) {
         console.error("Failed to edit blog:", error);
         return { error: "Failed to edit blog" };
     }
-} 
+}

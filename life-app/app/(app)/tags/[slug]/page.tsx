@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getBlogsByTag } from '@/sanity/lib/blogs/getBlogsByTag';
-import { client } from '@/sanity/lib/client';
-import { defineQuery } from 'groq';
+import { getTagInfo } from '@/payload/lib/tags';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TagList } from '@/components/ui/tag';
 import Link from 'next/link';
@@ -18,21 +17,9 @@ export default async function TagPage({ params }: TagPageProps) {
   const { slug } = params;
   
   try {
-    // Get tag info directly
-    const tagQuery = defineQuery(`
-      *[_type == "tag" && slug.current == $slug][0] {
-        _id,
-        name,
-        "slug": slug.current,
-        description,
-        color,
-        createdAt
-      }
-    `);
-    
     const [blogs, tagInfo] = await Promise.all([
       getBlogsByTag(slug),
-      client.fetch(tagQuery, { slug })
+      getTagInfo(slug)
     ]);
 
     if (!tagInfo) {
@@ -72,7 +59,7 @@ export default async function TagPage({ params }: TagPageProps) {
                   {blog.image && (
                     <div className="relative h-48 w-full">
                       <Image
-                        src={`https://cdn.sanity.io/images/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}/${process.env.NEXT_PUBLIC_SANITY_DATASET}/${blog.image.asset._ref.replace('image-', '').replace('-jpg', '.jpg').replace('-png', '.png')}`}
+                        src={blog.imageUrl || blog.image?.url || blog.image?.asset?.url || ''}
                         alt={blog.image.alt || blog.title}
                         fill
                         className="object-cover rounded-t-lg"
