@@ -179,8 +179,8 @@ VERCEL_PROJECT_PRODUCTION_URL=app.example.com
 ## Getting started
 
 ### Prerequisites
-- Node.js 20 LTS or newer
-- pnpm 9 or newer (matches `vercel.json` install/build commands)
+- Node.js 24.19.0 (tested for this tooling change; see verification results below)
+- pnpm 10.12.4 (pinned by `packageManager`; matches `vercel.json` commands)
 - A Sanity project and dataset
 - A Clerk application
 - Optional but recommended: OpenAI API access and a YouTube Data API key
@@ -234,12 +234,12 @@ Then make sure:
 
 ### Start the app
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 To expose the dev server on your LAN from a Linux machine:
 ```bash
-npm run dev -- --hostname 0.0.0.0 --port 3000
+pnpm run dev --hostname 0.0.0.0 --port 3000
 ```
 
 Then browse to `http://server-ip:3000`.
@@ -248,7 +248,7 @@ Then browse to `http://server-ip:3000`.
 
 ### Recommended production topology
 - Ubuntu or Debian LTS
-- Node.js 20 LTS or newer
+- Node.js 24.19.0 (tested for this tooling change; see verification results below)
 - `systemd` to keep the Next.js process running
 - Nginx reverse proxy in front of `next start`
 - HTTPS enabled at the reverse proxy
@@ -288,15 +288,15 @@ Important:
 ### 3. Build on Linux
 Use the normal Next.js build on Linux:
 ```bash
-NODE_ENV=production npm run build
+NODE_ENV=production pnpm run build
 ```
 
-Do not use `npm run build:prod` on Linux. That script uses Windows `set ...` syntax.
+`pnpm run build:prod` and `pnpm run build:force` are compatibility aliases for `pnpm run build` on all platforms. They do not skip checks or clear build caches.
 
 ### 4. Smoke test the production server
 Run the app locally on the server before wiring up Nginx:
 ```bash
-npm run start -- --hostname 127.0.0.1 --port 3000
+pnpm run start --hostname 127.0.0.1 --port 3000
 ```
 
 If you need direct LAN access without a reverse proxy during testing, use `0.0.0.0` instead of `127.0.0.1`.
@@ -313,7 +313,7 @@ Type=simple
 User=<deploy-user>
 WorkingDirectory=/srv/apps/<project-name>/life-app
 Environment=NODE_ENV=production
-ExecStart=/usr/bin/env npm run start -- --hostname 127.0.0.1 --port 3000
+ExecStart=/usr/bin/env pnpm run start --hostname 127.0.0.1 --port 3000
 Restart=always
 RestartSec=5
 
@@ -382,12 +382,12 @@ For normal updates on the Linux server:
 ```bash
 git pull
 pnpm install --frozen-lockfile
-NODE_ENV=production npm run build
+NODE_ENV=production pnpm run build
 sudo systemctl restart <project-name>
 ```
 
 ### Common Linux deployment pitfalls
-- If the build fails because `build:prod` was used, switch to `NODE_ENV=production npm run build`.
+- If a build fails, inspect the error and run `pnpm run lint` and `pnpm run typecheck`; the build aliases do not repair application errors.
 - If auth redirects or Clerk webhooks fail, verify your production hostname is registered in Clerk.
 - If generated URLs point to the wrong place, re-check `NEXT_PUBLIC_BASE_URL` and `VERCEL_PROJECT_PRODUCTION_URL`.
 - If the site is unreachable externally, check `systemctl status <project-name>`, `sudo nginx -t`, and your firewall rules for ports `80` and `443`.
@@ -405,7 +405,7 @@ pm2 -v
 From `life-app/`, after your production environment file is in place:
 ```bash
 pnpm install --frozen-lockfile
-NODE_ENV=production npm run build
+NODE_ENV=production pnpm run build
 ```
 
 #### 3. Start the app with PM2
@@ -438,7 +438,7 @@ pm2 save
 ```bash
 git pull
 pnpm install --frozen-lockfile
-NODE_ENV=production npm run build
+NODE_ENV=production pnpm run build
 pm2 restart <project-name> --update-env
 ```
 
@@ -511,24 +511,49 @@ You can run it on your own server as a standard Next.js Node.js app behind Nginx
  
 Important:
 - This is not a static-export-only site. Because the app uses Next.js App Router features, API routes, Clerk auth, Sanity Studio, and server-side logic, a webserver alone cannot serve it as plain static files.
-- To self-host it, run the Next.js server with `npm run start` and let your webserver proxy requests to that Node.js process.
+- To self-host it, run the Next.js server with `pnpm run start` and let your webserver proxy requests to that Node.js process.
 - `vercel.json` only affects Vercel deployments and can be ignored when you host the app yourself.
 - The `vercel` package currently listed in `package.json` is not imported by the application code, so it is not what makes the app run in production.
 - `VERCEL_PROJECT_PRODUCTION_URL` is still the environment variable name used by `lib/baseUrl.ts`. Even when you do not use Vercel, set it to your public hostname without `https://`.
 - `lib/auth/middleware.ts` still checks `VERCEL_ENV` for some production build-time auth fallbacks. If a self-hosted `next build` fails because auth code is evaluated during build, set `VERCEL_ENV=production` as a compatibility shim for the build environment or refactor that check later.
 
+## Tooling verification — October 8, 2026
+
+Tested on Linux with Node.js 24.19.0, pnpm 10.12.4, ESLint 9.31.0, Next.js 16.1.6, and TypeScript 5.8.3. Run from `life-app/`. Use the pinned pnpm version: a different global pnpm can attempt to reinstall the modules directory with incompatible settings.
+
+The exact invocations below select pnpm 10.12.4 without depending on your global installation. Once `pnpm --version` confirms 10.12.4, the equivalent `pnpm ...` commands in this README are suitable.
+
+| Verified invocation | Observed result |
+| --- | --- |
+| `npx --yes pnpm@10.12.4 install --frozen-lockfile` | Passed; no dependency or lockfile changes |
+| `npx --yes pnpm@10.12.4 exec eslint next.config.ts eslint.config.mjs` | Passed with no findings |
+| `npx --yes pnpm@10.12.4 run lint` | Command/config work; 32 application errors and 802 warnings; exits 1 |
+| `npx --yes pnpm@10.12.4 run lint --fix-dry-run` | Preview works; 27 errors remain after proposed fixes in five files; writes no source fixes |
+| `npx --yes pnpm@10.12.4 run lint:fix --help` | Passed CLI dispatch check; full automatic source fixes were not applied |
+| `npx --yes pnpm@10.12.4 run typecheck` | Runs correctly; 198 TypeScript diagnostics; exits 2 |
+| `npx --yes pnpm@10.12.4 run build` | Compiled, then failed collecting page data due to missing `NEXT_PUBLIC_SANITY_DATASET` |
+| `npx --yes pnpm@10.12.4 run build:prod --help` and `npx --yes pnpm@10.12.4 run build:force --help` | Both aliases reach the supported Next.js build CLI; these help checks are not successful production builds |
+| `npx --yes pnpm@10.12.4 run typegen` | Supported subcommands, but schema extraction is blocked loading the current Sanity configuration; a retry with test project/dataset values failed with `CorsOriginError` |
+
+The installed Sanity 5.8.1 CLI confirms `sanity schema extract` and `sanity typegen generate`; `sanity schema generate` does not exist. Type generation remains unverified end to end until the Sanity configuration issue is resolved. Test identifiers were used only for a verification attempt, not saved as application configuration.
+
+ESLint uses `eslint.config.mjs`; its Next.js presets and the six existing warning-level overrides are verified through the effective configuration. Generated Next.js, Clerk state, build outputs, coverage, and generated Sanity types are ignored. Do not add broad source ignores or downgrade errors to make the report pass.
+
+Builds still use the pre-existing `typescript.ignoreBuildErrors` setting and do not run lint. Run lint and typecheck separately; command repair does not certify the application as release-ready. The lint/type defects and mandatory provider configuration are separate follow-up work.
+
 ## Scripts
 
 | Script | Purpose |
 | --- | --- |
-| `npm run dev` | Start the Next.js dev server |
-| `npm run build` | Standard production build |
-| `npm run build:prod` | Windows-shell deployment build; use `npm run build` on Linux servers |
-| `npm run build:force` | Windows-shell force-build path used for harder deployment recovery cases |
-| `npm run start` | Start the production server |
-| `npm run lint` | Run linting |
-| `npm run lint:fix` | Auto-fix lint issues where possible |
-| `npm run typegen` | Extract and generate Sanity schema typings |
+| `pnpm run dev` | Start the Next.js dev server |
+| `pnpm run build` | Standard production build |
+| `pnpm run build:prod` | Cross-platform compatibility alias for `pnpm run build` |
+| `pnpm run build:force` | Compatibility alias for `pnpm run build`; does not force success or clear caches |
+| `pnpm run start` | Start the production server |
+| `pnpm run lint` | Run ESLint directly using the native flat config |
+| `pnpm run lint:fix` | Apply supported ESLint fixes; review the diff afterward |
+| `pnpm run typecheck` | Run TypeScript without emitting files or incremental artifacts |
+| `pnpm run typegen` | Extract and generate Sanity schema typings |
 
 ## Maintenance mode
 
@@ -550,7 +575,7 @@ The change takes effect on the next request. Use maintenance mode during deploym
 
 - Vercel is the original default host and reads `vercel.json`, but self-hosted installs can ignore that file.
 - Linux self-hosting is supported with a standard `next build` plus `next start` workflow behind a reverse proxy.
-- On Linux servers, use `NODE_ENV=production npm run build`; `npm run build:prod` and `npm run build:force` are Windows-shell specific.
+- `pnpm run build`, `pnpm run build:prod`, and `pnpm run build:force` use the same cross-platform Next.js build command.
 - `next.config.ts` allows remote images from Clerk and Sanity CDNs.
 - `instrumentation.ts` guards server rendering against Node `localStorage` issues.
 - The Clerk webhook endpoint is `/api/webhooks/clerk`.
@@ -601,6 +626,13 @@ That route reads teacher channel IDs from Sanity and then fetches recent uploads
 - To verify the setup, open `/api/youtube-feed?limit=12` and confirm the new channel's videos are included
 
 ## Changelog
+
+### 2026-10-08 — tooling command repair
+
+- Replaced removed `next lint` scripts and the legacy preset compatibility wrapper with the ESLint CLI and native Next.js flat presets. Moved the existing warning policy into the active config and removed the redundant legacy config.
+- Removed the unsupported Next.js `eslint` build option; lint runs as a separate check.
+- Made `build:prod` and `build:force` cross-platform aliases of the standard build and added an explicit non-emitting `typecheck` command. The pre-existing build-time TypeScript bypass remains documented.
+- Pinned pnpm 10.12.4 and aligned command examples with pnpm. See the tooling verification section for actual command results.
 
 ### LIFE design system overhaul (latest)
 

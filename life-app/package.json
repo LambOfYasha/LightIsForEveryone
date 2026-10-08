@@ -5,12 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:prod": "set DISABLE_ESLINT_PLUGIN=true && set NODE_ENV=production && set SKIP_TYPE_CHECK=true && next build",
-    "build:force": "set DISABLE_ESLINT_PLUGIN=true && set NODE_ENV=production && set FORCE_BUILD=true && set SKIP_TYPE_CHECK=true && next build",
+    "build:prod": "next build",
+    "build:force": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
-    "typegen": "sanity schema extract && sanity schema generate"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typegen": "sanity schema extract && sanity typegen generate",
+    "typecheck": "tsc --noEmit --incremental false"
   },
   "dependencies": {
     "@clerk/agent-toolkit": "^0.1.11",
@@ -88,5 +89,6 @@
     "stylelint-config-standard": "^39.0.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@10.12.4"
 }

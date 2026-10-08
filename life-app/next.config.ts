@@ -16,10 +16,6 @@ const nextConfig: NextConfig = {
   // Optimize for production
   compress: true,
   poweredByHeader: false,
-  // Disable ESLint during build for deployment
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // Disable TypeScript type checking during build
   typescript: {
     ignoreBuildErrors: true,
