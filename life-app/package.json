@@ -58,6 +58,8 @@
     "@tiptap/react": "^3.0.7",
     "@tiptap/starter-kit": "^3.0.7",
     "ai": "^4.3.19",
+    "@lambofyasha/loy-dual-store": "git+https://github.com/LambOfYasha/loy-dual-store.git#d953c542b5a2d121ceec9305594425e5f06a8a4b",
+    "@lambofyasha/loy-webapp-essentials": "git+https://github.com/LambOfYasha/loy_webapp_essentials.git#6fd614b39fbcbb4e013603e78b0c8de658e428eb",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
     "date-fns": "^4.1.0",

@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Clerk local/keyless state can contain publishable and secret keys.
+.clerk/
+
 # vercel
 .vercel
 
