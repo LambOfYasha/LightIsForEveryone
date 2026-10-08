@@ -21,6 +21,30 @@ Read `../AGENTS.md`, `README.md`, and `CONTRIBUTING.md` first.
 - Preserve recoverable data and identity mappings through staged migration.
   Do not delete old providers or run production migration scripts on inference.
 
+## Primary services and optional backups
+
+- Target architecture: LOY-owned services provide core authentication, sessions,
+  authorization, application data, and the deployable application runtime.
+- Clerk, Sanity, and other replaceable providers may remain as optional backup
+  adapters for planned maintenance or rollback. Their absence must not prevent
+  the primary application from starting or serving its core workflows.
+- Prioritize removing mandatory provider imports, configuration requirements,
+  and request-path calls through explicit service interfaces and selected adapters.
+- Separate current implementation from this target. Installing LOY packages alone
+  does not establish an independent identity system or complete migration.
+- Use stable application-owned user IDs and explicit external identity mappings.
+  Do not equate matching email addresses with verified account ownership.
+- Backup activation must be deliberate and documented. Define which deployment,
+  identity records, data snapshot, and write owner are active. Prevent divergent
+  writes and verify reconciliation before returning to the primary path.
+- A backup identity provider cannot repair an incompatible application deployment.
+  Plan a known-good deployment and data compatibility for feature maintenance.
+- Verify core workflows with backup credentials absent and backup services
+  unavailable: startup, public reads, sign-in/session lifecycle, permitted writes,
+  role enforcement, administration, and maintenance controls.
+- During the transition preserve existing providers until the replacement paths
+  pass verification; outages must never bypass authentication or authorization.
+
 ## Current validation limitations
 
 Reviewed October 8, 2026, against main at `f37cfbe`. Recheck these facts when
