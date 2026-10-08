@@ -20,7 +20,6 @@ const isProtectedRoute = createRouteMatcher([
   '/api/reports(.*)', // Protect report endpoints because they are tied to authenticated moderation/user flows.
   '/api/search(.*)', // Protect the app's search endpoints under the current access policy.
   '/api/user(.*)', // Protect user profile and user-role endpoints.
-  '/api/webhooks(.*)', // Protect webhook endpoints inside the Clerk-aware middleware pipeline.
 ]);
 
 // These more specific API routes remain available to guests even though broader parent prefixes are protected.
@@ -29,6 +28,12 @@ const isPublicApiRoute = createRouteMatcher([
   '/api/comments/guest(.*)', // Allow guest comment submission endpoints.
   '/api/communities/guest(.*)', // Allow guest-safe community endpoints.
   '/api/moderation(.*)', // Allow the public moderation flow used by guest features.
+]);
+
+// Public content reads must stay available to signed-out visitors while writes remain protected.
+const isPublicReadApiRoute = createRouteMatcher([
+  '/api/blogs(.*)', // The landing page reads published blog content without a Clerk session.
+  '/api/communities(.*)', // The landing page reads published community content without a Clerk session.
 ]);
 
 // These routes must remain reachable during maintenance to avoid redirect loops and allow privileged sign-in.
@@ -243,13 +248,18 @@ async function getMaintenanceModeResponse(userId: string | null | undefined, req
  * Clerk resolves the auth context first, then this function layers on app-specific rules.
  */
 const middleware = clerkMiddleware(async (auth, req) => {
+  // Clerk webhooks authenticate with Svix in the route handler; they must not be gated by a user session.
+  if (req.nextUrl.pathname.startsWith('/api/webhooks/clerk')) {
+    return;
+  }
+
   // Ask Clerk for the current authenticated user, if any.
   const { userId } = await auth();
 
   // Enforce sign-in on protected routes before any other redirect system runs.
   if (isProtectedRoute(req) && !userId) {
     // Some child API routes are intentionally public even though their parent prefixes are protected.
-    if (isPublicApiRoute(req)) {
+    if (isPublicApiRoute(req) || (isPublicReadApiRoute(req) && ['GET', 'HEAD'].includes(req.method))) {
       return;
     }
 
