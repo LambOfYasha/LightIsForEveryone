@@ -86,11 +86,12 @@ This project uses a branch-intent workflow. In the current checkout, the configu
 
 ## Validation and testing expectations
 
-This repo currently exposes `npm run lint`, `npm run build`, `npm run build:prod`, and `npm run typegen`. There is not currently a dedicated automated `test` script in `package.json`, so contributors should pair command-based validation with targeted manual verification.
+This repo currently exposes `pnpm run lint`, `pnpm run build`, `pnpm run typecheck`, and `pnpm run typegen`. There is not currently a dedicated automated `test` script in `package.json`, so contributors should pair command-based validation with targeted manual verification.
 
-- Run `npm run lint` for code changes unless the change is documentation-only.
-- Run `npm run build` when you touch routing, config, providers, auth boundaries, or server-integrated features.
-- Run `npm run typegen` after Sanity schema changes.
+- Run `pnpm run lint` and `pnpm run typecheck` for code changes unless the change is documentation-only. Lint uses the ESLint CLI and the application flat config.
+- Builds currently bypass TypeScript errors in `next.config.ts`; run the explicit typecheck and report failures separately.
+- Run `pnpm run build` when you touch routing, config, providers, auth boundaries, or server-integrated features.
+- Run `pnpm run typegen` after Sanity schema changes.
 - Manually verify the exact flow you changed.
 - If you cannot run a validation step, call that out clearly in the pull request or handoff.
 
