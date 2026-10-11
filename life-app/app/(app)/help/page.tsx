@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
@@ -111,12 +113,17 @@ export default function HelpCenterPage() {
       return;
     }
 
+    const category = formData.category;
+    if (category !== 'technical' && category !== 'account' && category !== 'content' && category !== 'feature' && category !== 'bug' && category !== 'other') {
+      toast({ title: 'Validation Error', description: 'Choose a valid category', variant: 'destructive' });
+      return;
+    }
     setLoading(true);
     try {
       const result = await createTicket({
         title: formData.title,
         description: formData.description,
-        category: formData.category,
+        category,
         priority: formData.priority,
         userId: user.id,
         userEmail: user.primaryEmailAddress?.emailAddress || '',
@@ -219,7 +226,7 @@ export default function HelpCenterPage() {
             Please sign in to access the help center and create support tickets.
           </p>
           <Button asChild>
-            <a href="/sign-in">Sign In</a>
+            <Link href="/sign-in">Sign In</Link>
           </Button>
         </div>
       </div>

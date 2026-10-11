@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     console.log("Query parameters:", { search, status, sortBy, sortOrder, page, limit });
 
     // Build the GROQ query with filters
-    let filterConditions = ['_type == "communityQuestion"'];
+    const filterConditions = ['_type == "communityQuestion"'];
     
     if (search) {
       filterConditions.push(`(title match "*${search}*" || description match "*${search}*")`);
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
     console.log("Query results:", {
       communitiesCount: communities?.length || 0,
       total,
-      communities: communities?.map(c => ({ _id: c._id, title: c.title, status: c.status }))
+      communities: communities?.map((c: { _id: string; title: string; status: string }) => ({ _id: c._id, title: c.title, status: c.status }))
     });
 
     const totalPages = Math.ceil(total / limit);

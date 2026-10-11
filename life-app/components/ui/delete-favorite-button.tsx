@@ -59,7 +59,7 @@ export default function DeleteFavoriteButton({
 
   return (
     <Button
-      size={size}
+      size={size === "md" ? "default" : size}
       variant={variant}
       onClick={handleDelete}
       disabled={isDeleting}

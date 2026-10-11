@@ -1,4 +1,4 @@
-import { defineField, defineType, ValidationRule } from "sanity";
+import { defineField, defineType } from "sanity";
 import { MessageSquare } from "lucide-react";
 
 export const feedbackType = defineType({
@@ -12,7 +12,7 @@ export const feedbackType = defineType({
       title: 'Title',
       type: 'string',
       description: 'Brief title for the feedback',
-      validation: (Rule: ValidationRule) => Rule.required().min(5).max(200),
+      validation: (Rule) => Rule.required().min(5).max(200),
     }),
     defineField({
       name: 'content',
@@ -20,7 +20,7 @@ export const feedbackType = defineType({
       type: 'text',
       description: 'Detailed feedback content',
       rows: 6,
-      validation: (Rule: ValidationRule) => Rule.required().min(10).max(5000),
+      validation: (Rule) => Rule.required().min(10).max(5000),
     }),
     defineField({
       name: 'category',
@@ -40,7 +40,7 @@ export const feedbackType = defineType({
         ],
         layout: 'radio'
       },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'status',
@@ -59,7 +59,7 @@ export const feedbackType = defineType({
         layout: 'radio'
       },
       initialValue: 'new',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'priority',
@@ -76,7 +76,7 @@ export const feedbackType = defineType({
         layout: 'radio'
       },
       initialValue: 'medium',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'userId',
@@ -89,7 +89,7 @@ export const feedbackType = defineType({
       title: 'User Email',
       type: 'string',
       description: 'Email address of the feedback submitter',
-      validation: (Rule: ValidationRule) => Rule.email(),
+      validation: (Rule) => Rule.email(),
     }),
     defineField({
       name: 'userName',
@@ -139,7 +139,7 @@ export const feedbackType = defineType({
       type: 'datetime',
       description: 'When the feedback was created',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',
@@ -147,7 +147,7 @@ export const feedbackType = defineType({
       type: 'datetime',
       description: 'When the feedback was last updated',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {

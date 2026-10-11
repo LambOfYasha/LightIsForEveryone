@@ -159,7 +159,7 @@ export async function getUserDashboardData(): Promise<DashboardData | { error: s
     // Calculate stats
     const posts = postsData.recent || [];
     const communities = communitiesData.joined || [];
-    const notifications = notificationsData.success ? notificationsData.notifications : [];
+    const notifications = notificationsData.success ? (notificationsData.notifications ?? []) : [];
     const analytics = analyticsData;
     const favorites = favoriteStats;
 
@@ -198,7 +198,7 @@ export async function getUserDashboardData(): Promise<DashboardData | { error: s
         totalViews,
         totalComments,
         communitiesJoined: communitiesData.total || 0,
-        favoritesSaved: favorites.total || 0,
+        favoritesSaved: ('total' in favorites ? favorites.total : 0),
         engagementRate: Math.round(engagementRate * 10) / 10,
         weeklyGrowth
       },
@@ -256,7 +256,7 @@ function generateWeeklyActivity(posts: any[]) {
 }
 
 function generateRecentActivity(posts: any[], communities: any[], notifications: any[]) {
-  const activities = [];
+  const activities: DashboardData['recentActivity'] = [];
 
   // Add recent posts
   posts.slice(0, 3).forEach((post: any) => {
@@ -319,6 +319,7 @@ function generateEngagementTrends(posts: any[]) {
     return {
       period,
       views: Math.round(baseViews * multiplier),
+      likes: 0, // This query does not provide per-period likes.
       comments: Math.round(baseComments * multiplier)
     };
   });

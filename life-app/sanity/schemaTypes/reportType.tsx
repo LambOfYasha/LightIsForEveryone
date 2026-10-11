@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { Flag, AlertTriangle } from "lucide-react";
 
 export const reportType = defineType({
@@ -13,7 +13,7 @@ export const reportType = defineType({
       type: 'reference',
       to: [{type: 'user'}, {type: 'teacher'}],
       description: 'The user who submitted the report',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'reportedContent',
@@ -28,7 +28,7 @@ export const reportType = defineType({
         {type: 'teacher'}
       ],
       description: 'The content that was reported',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'contentType',
@@ -46,7 +46,7 @@ export const reportType = defineType({
         ],
         layout: 'dropdown'
       },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'reason',
@@ -66,14 +66,14 @@ export const reportType = defineType({
         ],
         layout: 'dropdown'
       },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'description',
       title: 'Additional Details',
       type: 'text',
       description: 'Additional details about the report (optional)',
-      validation: (Rule: ValidationRule) => Rule.max(1000),
+      validation: (Rule) => Rule.max(1000),
     }),
     defineField({
       name: 'status',
@@ -92,7 +92,7 @@ export const reportType = defineType({
         layout: 'dropdown'
       },
       initialValue: 'pending',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'reviewedBy',
@@ -112,7 +112,7 @@ export const reportType = defineType({
       title: 'Review Notes',
       type: 'text',
       description: 'Notes from the admin/moderator review',
-      validation: (Rule: ValidationRule) => Rule.max(1000),
+      validation: (Rule) => Rule.max(1000),
     }),
     defineField({
       name: 'actionTaken',
@@ -136,7 +136,7 @@ export const reportType = defineType({
       type: 'datetime',
       description: 'When the report was submitted',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',

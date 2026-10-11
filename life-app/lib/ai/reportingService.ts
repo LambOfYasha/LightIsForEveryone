@@ -1,5 +1,5 @@
 import { ModerationResult } from './moderation';
-import { AnalyticsService } from './analyticsService';
+import { AnalyticsService, type ModerationAnalytics } from './analyticsService';
 import { AppealService } from './appealSystem';
 import { CustomGuidelinesService } from './customGuidelines';
 
@@ -28,24 +28,9 @@ export interface ModerationReport {
     customGuidelinesUsed: number;
   };
   details: {
-    byContentType: Record<string, {
-      total: number;
-      allowed: number;
-      flagged: number;
-      blocked: number;
-      averageConfidence: number;
-    }>;
-    byUserRole: Record<string, {
-      total: number;
-      allowed: number;
-      flagged: number;
-      blocked: number;
-    }>;
-    topFlags: Array<{
-      flag: string;
-      count: number;
-      percentage: number;
-    }>;
+    byContentType: ModerationAnalytics['contentTypeBreakdown'];
+    byUserRole: ModerationAnalytics['userRoleBreakdown'];
+    topFlags: string[];
     timeSeries: Array<{
       date: string;
       total: number;
@@ -70,7 +55,7 @@ export interface ModerationReport {
     customGuidelines: {
       total: number;
       active: number;
-      usageCount: number;
+      byCategory: Record<string, number>;
       averageSuccessRate: number;
     };
   };
@@ -97,6 +82,9 @@ export class ReportingService {
     const reportId = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // Get analytics data
+    if (config.period === 'quarter' || config.period === 'year') {
+      throw new Error(`Analytics does not support the ${config.period} reporting period`);
+    }
     const analytics = await AnalyticsService.getModerationAnalytics(config.period);
     const appealStats = await AppealService.getAppealStats();
     const guidelineStats = CustomGuidelinesService.getGuidelineStats();
@@ -111,7 +99,7 @@ export class ReportingService {
       moderationRate: analytics.moderationRate,
       averageConfidence: analytics.averageConfidence,
       totalAppeals: appealStats.total,
-      appealRate: appealStats.appealRate,
+      appealRate: analytics.totalModerations > 0 ? (appealStats.total / analytics.totalModerations) * 100 : 0,
       customGuidelinesUsed: guidelineStats.active
     };
 
@@ -119,11 +107,7 @@ export class ReportingService {
     const details = {
       byContentType: analytics.contentTypeBreakdown,
       byUserRole: analytics.userRoleBreakdown,
-      topFlags: analytics.topFlags.map((flag, index) => ({
-        flag,
-        count: Math.floor(Math.random() * 50) + 10, // Mock data
-        percentage: Math.floor(Math.random() * 20) + 5
-      })),
+      topFlags: analytics.topFlags,
       timeSeries: analytics.timeSeriesData,
       appeals: appealStats,
       performance: performanceMetrics,
@@ -273,17 +257,17 @@ export class ReportingService {
 
     // Content type breakdown
     lines.push('Content Type Breakdown');
-    lines.push('Type,Total,Allowed,Flagged,Blocked,Average Confidence');
+    lines.push('Type,Total');
     Object.entries(report.details.byContentType).forEach(([type, data]) => {
-      lines.push(`${type},${data.total},${data.allowed},${data.flagged},${data.blocked},${(data.averageConfidence * 100).toFixed(1)}%`);
+      lines.push(`${type},${data}`);
     });
     lines.push('');
 
     // Top flags
     lines.push('Top Flags');
-    lines.push('Flag,Count,Percentage');
+    lines.push('Flag');
     report.details.topFlags.forEach(flag => {
-      lines.push(`${flag.flag},${flag.count},${flag.percentage}%`);
+      lines.push(`${flag}`);
     });
 
     return lines.join('\n');
@@ -326,14 +310,10 @@ export class ReportingService {
         {
           name: 'Content Types',
           data: [
-            ['Type', 'Total', 'Allowed', 'Flagged', 'Blocked', 'Avg Confidence'],
+            ['Type', 'Total'],
             ...Object.entries(report.details.byContentType).map(([type, data]) => [
               type,
-              data.total,
-              data.allowed,
-              data.flagged,
-              data.blocked,
-              `${(data.averageConfidence * 100).toFixed(1)}%`
+              data
             ])
           ]
         }

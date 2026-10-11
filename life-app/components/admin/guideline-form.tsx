@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { CustomGuideline } from '@/lib/ai/customGuidelines';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ import { X, Plus, Save, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface GuidelineFormProps {
-  guideline?: any;
+  guideline?: Partial<CustomGuideline>;
   onSave: (guideline: any) => Promise<void>;
   onCancel: () => void;
 }
@@ -24,20 +25,20 @@ export default function GuidelineForm({ guideline, onSave, onCancel }: Guideline
   const [formData, setFormData] = useState({
     name: guideline?.name || '',
     description: guideline?.description || '',
-    category: guideline?.category || 'spam',
-    severity: guideline?.severity || 'medium',
+    category: String(guideline?.category || 'spam'),
+    severity: String(guideline?.severity || 'medium'),
     keywords: guideline?.keywords || [],
     patterns: guideline?.patterns || [],
     conditions: {
-      contentType: guideline?.conditions?.contentType || 'post',
-      userRole: guideline?.conditions?.userRole || 'user',
+      contentType: String(guideline?.conditions?.contentType || 'post'),
+      userRole: String(guideline?.conditions?.userRole || 'user'),
       contentLength: {
         min: guideline?.conditions?.contentLength?.min || 10,
         max: guideline?.conditions?.contentLength?.max || 1000
       }
     },
     actions: {
-      suggestedAction: guideline?.actions?.suggestedAction || 'flag',
+      suggestedAction: String(guideline?.actions?.suggestedAction || 'flag'),
       confidenceThreshold: guideline?.actions?.confidenceThreshold || 0.7,
       customMessage: guideline?.actions?.customMessage || '',
       requireReview: guideline?.actions?.requireReview || true

@@ -1,5 +1,5 @@
 import { adminClient } from "@/sanity/lib/adminClient"
-import { UserRole } from "../auth/roles"
+import { UserRole, UserWithRole } from "../auth/roles"
 
 export async function addUser({
     id,
@@ -33,6 +33,9 @@ export async function addUser({
             role,
             joinedAt: new Date().toISOString(),
             isReported: false,
+            bio: '',
+            location: '',
+            website: '',
         })
 
         console.log("User created successfully in Sanity:", user._id)
@@ -56,13 +59,17 @@ export async function createGuestUser(guestName: string): Promise<UserWithRole |
             id: guestId,
             username: guestName,
             email: `${guestId}@guest.local`,
-            role: 'guest',
+            role: 'guest' as const,
+            imageURL: '',
             joinedAt: new Date().toISOString(),
             isActive: true,
             postCount: 0,
             commentCount: 0,
             reportCount: 0,
             isReported: false,
+            bio: '',
+            location: '',
+            website: '',
             isDeleted: false,
         });
 

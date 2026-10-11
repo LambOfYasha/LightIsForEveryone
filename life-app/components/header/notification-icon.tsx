@@ -8,34 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@clerk/nextjs';
 
-// Import notification actions with error handling
-let notificationActions;
-try {
-  notificationActions = require('@/action/notificationActions');
-} catch (error) {
-  console.error('Failed to import notification actions:', error);
-  notificationActions = {
-    getUserNotifications: async () => ({ success: false, error: 'Notification actions not available' }),
-    markNotificationAsRead: async () => ({ success: false, error: 'Notification actions not available' }),
-    markAllNotificationsAsRead: async () => ({ success: false, error: 'Notification actions not available' }),
-    deleteNotification: async () => ({ success: false, error: 'Notification actions not available' }),
-  };
-}
-
-// Try to import Radix UI popover, fallback to simple popover
-let Popover, PopoverContent, PopoverTrigger;
-try {
-  const popoverModule = require('@/components/ui/popover');
-  Popover = popoverModule.Popover;
-  PopoverContent = popoverModule.PopoverContent;
-  PopoverTrigger = popoverModule.PopoverTrigger;
-} catch (error) {
-  console.error('Failed to import Radix popover, using simple popover:', error);
-  const simplePopoverModule = require('@/components/ui/simple-popover');
-  Popover = simplePopoverModule.Popover;
-  PopoverContent = simplePopoverModule.PopoverContent;
-  PopoverTrigger = simplePopoverModule.PopoverTrigger;
-}
+import * as notificationActions from '@/action/notificationActions';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import Link from 'next/link';
 
 interface NotificationIconProps {
   userId: string;
@@ -331,9 +306,9 @@ export default function NotificationIcon({ userId }: NotificationIconProps) {
           {notifications.length > 5 && (
             <div className="text-center pt-2">
               <Button variant="outline" size="sm" asChild>
-                <a href="/admin/advanced-moderation?tab=notifications">
+                <Link href="/admin/advanced-moderation?tab=notifications">
                   View all notifications
-                </a>
+                </Link>
               </Button>
             </div>
           )}

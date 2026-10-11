@@ -16,10 +16,6 @@ const nextConfig: NextConfig = {
   // Optimize for production
   compress: true,
   poweredByHeader: false,
-  // Disable TypeScript type checking during build
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   // Enable static optimization where possible
   experimental: {
     optimizePackageImports: ['lucide-react'],

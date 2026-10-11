@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { MessageSquare } from "lucide-react";
 
 export const commentType = defineType({
@@ -12,7 +12,7 @@ export const commentType = defineType({
       title: 'Content',
       type: 'text',
       description: 'The comment content',
-      validation: (Rule: ValidationRule) => Rule.required().min(1).max(1000),
+      validation: (Rule) => Rule.required().min(1).max(1000),
     }),
     defineField({
       name: 'author',
@@ -20,7 +20,7 @@ export const commentType = defineType({
       type: 'reference',
       to: [{type: 'user'}, {type: 'teacher'}],
       description: 'The author of the comment',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'post',
@@ -28,7 +28,7 @@ export const commentType = defineType({
       type: 'reference',
       to: [{type: 'communityQuestion'}, {type: 'blog'}],
       description: 'The post this comment belongs to',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'postType',
@@ -42,7 +42,7 @@ export const commentType = defineType({
         ],
         layout: 'radio'
       },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'parentComment',
@@ -78,7 +78,7 @@ export const commentType = defineType({
       type: 'datetime',
       description: 'When the comment was created',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',

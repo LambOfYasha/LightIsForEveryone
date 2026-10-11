@@ -31,7 +31,7 @@ export interface TicketFilters {
   limit?: number;
 }
 
-export async function createTicket(ticketData: Omit<TicketData, '_id' | 'createdAt' | 'updatedAt'>) {
+export async function createTicket(ticketData: Omit<TicketData, '_id' | 'createdAt' | 'updatedAt' | 'status'>) {
   try {
     const { userId } = await auth();
     if (!userId) {

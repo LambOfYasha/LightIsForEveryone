@@ -16,6 +16,9 @@ export interface Notification {
     guidelineId?: string;
     batchId?: string;
     testMessage?: string;
+    userName?: string;
+    userEmail?: string;
+    adminResponse?: string;
     feedbackId?: string;
     feedbackTitle?: string;
     feedbackCategory?: string;

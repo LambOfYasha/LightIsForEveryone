@@ -123,7 +123,10 @@ export default function UserManagement({ initialUsers = [] }: UserManagementProp
       },
     ],
     loadData: getAllUsers,
-    updateRole: updateUserRole,
+    updateRole: async (id: string, role: string) => {
+      if (role === 'admin' || role === 'dev' || role === 'lead_teacher' || role === 'member' || role === 'moderator' || role === 'teacher' || role === 'junior_teacher' || role === 'senior_teacher') return updateUserRole(id, role);
+      return { success: false, error: 'Invalid role' };
+    },
     toggleStatus: toggleUserStatus,
     deleteItem: async (userId: string) => {
       // Check if current user is senior teacher and target user is not a member

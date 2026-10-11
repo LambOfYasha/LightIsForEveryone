@@ -53,7 +53,7 @@ export async function createFeedback(feedbackData: Omit<FeedbackData, '_id' | 'c
         userDetails = {
           userId: userResult._id,
           userEmail: userResult.email,
-          userName: userResult.displayName || userResult.firstName + ' ' + userResult.lastName,
+          userName: userResult.username,
         };
       }
     }

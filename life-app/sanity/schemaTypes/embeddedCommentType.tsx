@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 
 export const embeddedCommentType = defineType({
   name: 'embeddedComment',
@@ -10,7 +10,7 @@ export const embeddedCommentType = defineType({
       title: 'Content',
       type: 'text',
       description: 'The comment content',
-      validation: (Rule: ValidationRule) => Rule.required().min(1).max(1000),
+      validation: (Rule) => Rule.required().min(1).max(1000),
     }),
     defineField({
       name: 'author',
@@ -18,21 +18,21 @@ export const embeddedCommentType = defineType({
       type: 'reference',
       to: [{type: 'user'}, {type: 'teacher'}],
       description: 'The author of the comment',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'authorId',
       title: 'Author ID',
       type: 'string',
       description: 'The Clerk ID of the author for quick access',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'authorUsername',
       title: 'Author Username',
       type: 'string',
       description: 'The username of the author for quick access',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'authorRole',
@@ -46,7 +46,7 @@ export const embeddedCommentType = defineType({
         ],
         layout: 'radio'
       },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'parentCommentId',
@@ -81,7 +81,7 @@ export const embeddedCommentType = defineType({
       type: 'datetime',
       description: 'When the comment was created',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',

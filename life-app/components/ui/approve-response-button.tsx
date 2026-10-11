@@ -52,7 +52,7 @@ export default function ApproveResponseButton({
   return (
     <Button
       variant={variant}
-      size={size}
+      size={size === "md" ? "default" : size}
       onClick={handleToggleApproval}
       disabled={isLoading}
       className={`${className} ${isApproved ? 'text-green-600 hover:text-green-700' : 'text-gray-600 hover:text-gray-700'}`}

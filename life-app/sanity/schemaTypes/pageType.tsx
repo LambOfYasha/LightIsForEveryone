@@ -1,20 +1,6 @@
-import { defineField, defineType, ValidationRule } from "sanity";
+import { defineField, defineType } from "sanity";
 import { FileText } from "lucide-react";
 import { getPageRedirectTargetError } from "../../lib/pages";
-
-type PageRouteBehaviorDocument = {
-  routeBehavior?: 'render' | 'redirect';
-};
-
-type PageRedirectToDocument = {
-  routeBehavior?: 'render' | 'redirect';
-  redirectTo?: string;
-};
-
-type PageRedirectTypeDocument = {
-  routeBehavior?: 'render' | 'redirect';
-  redirectType?: 'temporary' | 'permanent';
-};
 
 type PagePreviewDocument = {
   title?: string;
@@ -35,7 +21,7 @@ export const pageType = defineType({
       title: 'Title',
       type: 'string',
       description: 'The title shown at the top of the page',
-      validation: (Rule: ValidationRule) => Rule.required().min(2).max(120),
+      validation: (Rule) => Rule.required().min(2).max(120),
     }),
     defineField({
       name: 'slug',
@@ -43,23 +29,23 @@ export const pageType = defineType({
       type: 'slug',
       description: 'The route slug for this page',
       options: { source: 'title' },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'description',
       title: 'Description',
       type: 'text',
       description: 'Optional summary shown under the page title',
-      validation: (Rule: ValidationRule) => Rule.max(240),
+      validation: (Rule) => Rule.max(240),
     }),
     defineField({
       name: 'content',
       title: 'Content',
       type: 'text',
       description: 'The page content (HTML)',
-      hidden: ({ document }: { document?: PageRouteBehaviorDocument }) => document?.routeBehavior === 'redirect',
-      validation: (Rule: ValidationRule) =>
-        Rule.custom((value: unknown, context: { document?: PageRouteBehaviorDocument }) => {
+      hidden: ({ document }) => document?.routeBehavior === 'redirect',
+      validation: (Rule) =>
+        Rule.custom((value: unknown, context) => {
           if (context.document?.routeBehavior !== 'redirect' && (!value || typeof value !== 'string' || !value.trim())) {
             return 'Page content is required when this route shows a page.';
           }
@@ -87,16 +73,16 @@ export const pageType = defineType({
         layout: 'radio',
       },
       initialValue: 'render',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'redirectTo',
       title: 'Redirect To',
       type: 'string',
       description: 'Enter an internal path like /contact or a full external URL like https://example.com',
-      hidden: ({ document }: { document?: PageRouteBehaviorDocument }) => document?.routeBehavior !== 'redirect',
-      validation: (Rule: ValidationRule) =>
-        Rule.custom((value: unknown, context: { document?: PageRedirectToDocument }) => {
+      hidden: ({ document }) => document?.routeBehavior !== 'redirect',
+      validation: (Rule) =>
+        Rule.custom((value: unknown, context) => {
           if (context.document?.routeBehavior === 'redirect' && (!value || typeof value !== 'string' || !value.trim())) {
             return 'A destination path is required when this route redirects visitors.';
           }
@@ -121,9 +107,9 @@ export const pageType = defineType({
         layout: 'radio',
       },
       initialValue: 'temporary',
-      hidden: ({ document }: { document?: PageRouteBehaviorDocument }) => document?.routeBehavior !== 'redirect',
-      validation: (Rule: ValidationRule) =>
-        Rule.custom((value: unknown, context: { document?: PageRedirectTypeDocument }) => {
+      hidden: ({ document }) => document?.routeBehavior !== 'redirect',
+      validation: (Rule) =>
+        Rule.custom((value: unknown, context) => {
           if (context.document?.routeBehavior === 'redirect' && !value) {
             return 'Choose whether this redirect is temporary or permanent.';
           }
@@ -137,7 +123,7 @@ export const pageType = defineType({
       type: 'datetime',
       description: 'The date and time the page was created',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',
@@ -145,7 +131,7 @@ export const pageType = defineType({
       type: 'datetime',
       description: 'The date and time the page was last updated',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {

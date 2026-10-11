@@ -45,17 +45,8 @@ export async function requireRole(requiredRole: UserRole) {
     // Start with the base Clerk auth check so only signed-in users continue.
     const userId = await requireAuth();
     
-    // Build-time compatibility mode may intentionally return null instead of redirecting.
+    // A missing identity never grants access.
     if (!userId) {
-      // During build time, return a mock user to prevent auth-only pages from crashing the build.
-      if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV) {
-        return {
-          _id: 'build-user',
-          username: 'build-user',
-          email: 'build@example.com',
-          role: 'member' as UserRole
-        };
-      }
       // In a live request, a missing user ID still means the visitor must sign in.
       redirect('/sign-in');
     }
@@ -92,17 +83,8 @@ export async function requirePermission(permission: 'canCreatePosts' | 'canComme
     // Reuse the base auth check before evaluating any permission-specific logic.
     const userId = await requireAuth();
     
-    // Build-time compatibility mode may produce a null user ID instead of redirecting.
+    // A missing identity never grants access.
     if (!userId) {
-      // During build time, return a harmless mock user so static evaluation can finish.
-      if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV) {
-        return {
-          _id: 'build-user',
-          username: 'build-user',
-          email: 'build@example.com',
-          role: 'member' as UserRole
-        };
-      }
       // In a live request, missing auth means the user must sign in.
       redirect('/sign-in');
     }
@@ -160,17 +142,8 @@ export async function requireAdminOrTeacher() {
     // Reuse the base auth guard before checking app-specific roles.
     const userId = await requireAuth();
     
-    // Build-time compatibility mode returns a mock teacher-like user so compilation can proceed.
+    // A missing identity never grants access.
     if (!userId) {
-      // During build time, return a mock user to prevent errors.
-      if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV) {
-        return {
-          _id: 'build-user',
-          username: 'build-user',
-          email: 'build@example.com',
-          role: 'teacher' as UserRole
-        };
-      }
       // In a real request, unauthenticated users still go to sign-in.
       redirect('/sign-in');
     }
@@ -206,17 +179,8 @@ export async function requireAdminOrSeniorTeacher() {
     // Authenticate first so role checks only run for signed-in sessions.
     const userId = await requireAuth();
     
-    // Build-time compatibility mode returns a mock senior-teacher user to satisfy static evaluation.
+    // A missing identity never grants access.
     if (!userId) {
-      // During build time, return a mock user to prevent errors.
-      if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV) {
-        return {
-          _id: 'build-user',
-          username: 'build-user',
-          email: 'build@example.com',
-          role: 'senior_teacher' as UserRole
-        };
-      }
       // Live unauthenticated traffic still gets redirected to sign-in.
       redirect('/sign-in');
     }
@@ -252,17 +216,8 @@ export async function requireAdminOrLeadTeacher() {
     // Authenticate first so the later role filter works on a real user session.
     const userId = await requireAuth();
     
-    // Build-time compatibility mode returns a mock lead-teacher user for static evaluation paths.
+    // A missing identity never grants access.
     if (!userId) {
-      // During build time, return a mock user to prevent errors.
-      if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV) {
-        return {
-          _id: 'build-user',
-          username: 'build-user',
-          email: 'build@example.com',
-          role: 'lead_teacher' as UserRole
-        };
-      }
       // Unauthenticated runtime requests are redirected to sign-in.
       redirect('/sign-in');
     }
@@ -301,15 +256,6 @@ export async function getCurrentUser() {
     
     // No signed-in Clerk user means the caller should receive `null` instead of being redirected.
     if (!userId) {
-      // During build time, return a mock user to prevent auth-dependent rendering from crashing.
-      if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV) {
-        return {
-          _id: 'build-user',
-          username: 'build-user',
-          email: 'build@example.com',
-          role: 'member' as UserRole
-        };
-      }
       // Runtime guest requests simply get a null user.
       return null;
     }

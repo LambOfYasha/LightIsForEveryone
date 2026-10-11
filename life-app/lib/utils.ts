@@ -135,11 +135,11 @@ function portableTextBlocksToHtml(blocks: any[]): string {
 
   for (const block of blocks) {
     if (block?._type === 'block') {
-      const markDefsByKey = new Map(
+      const markDefsByKey = new Map<string, { _key: string; _type?: string; href?: string }>(
         Array.isArray(block.markDefs)
           ? block.markDefs
               .filter((markDef: any) => typeof markDef?._key === 'string')
-              .map((markDef: any) => [markDef._key, markDef])
+              .map((markDef: { _key: string; _type?: string; href?: string }): [string, typeof markDef] => [markDef._key, markDef])
           : []
       );
 

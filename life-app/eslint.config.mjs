@@ -6,6 +6,7 @@ export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
   {
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
     // Preserve the project's existing warning policy from .eslintrc.json.
     rules: {
       "@typescript-eslint/no-unused-vars": "warn",

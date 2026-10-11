@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:prod": "next build",
-    "build:force": "next build",
+    "build": "pnpm run check && next build",
+    "build:prod": "pnpm run build",
+    "build:force": "pnpm run build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typegen": "sanity schema extract && sanity typegen generate",
-    "typecheck": "tsc --noEmit --incremental false"
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "check": "pnpm run lint && pnpm run typecheck",
+    "test:regression": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@clerk/agent-toolkit": "^0.1.11",

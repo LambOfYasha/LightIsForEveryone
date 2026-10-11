@@ -62,7 +62,7 @@ export default function FavoriteButton({
   return (
     <Button
       variant={variant}
-      size={size}
+      size={size === "md" ? "default" : size}
       onClick={handleToggleFavorite}
       disabled={isLoading}
       className={className}

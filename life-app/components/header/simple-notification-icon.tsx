@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 import { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -260,9 +262,9 @@ export default function SimpleNotificationIcon({ userId }: NotificationIconProps
             {notifications.length > 5 && (
               <div className="text-center pt-2">
                 <Button variant="outline" size="sm" asChild>
-                  <a href="/admin/advanced-moderation?tab=notifications">
+                  <Link href="/admin/advanced-moderation?tab=notifications">
                     View all notifications
-                  </a>
+                  </Link>
                 </Button>
               </div>
             )}

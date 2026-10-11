@@ -1,6 +1,6 @@
 'use server';
 
-import { NotificationsService } from '@/lib/ai/notificationsService';
+import { createNotification } from '@/sanity/lib/notifications';
 
 export async function sendFeedbackCreatedNotification(
   feedbackId: string,
@@ -13,7 +13,8 @@ export async function sendFeedbackCreatedNotification(
 ) {
   try {
     // Notify all admins about new feedback
-    const adminNotification = await NotificationsService.createNotification({
+    const adminNotification = await createNotification({
+      isRead: false,
       type: 'system',
       title: 'New Feedback Received',
       message: `New ${feedbackCategory} feedback: "${feedbackTitle}"`,
@@ -32,8 +33,9 @@ export async function sendFeedbackCreatedNotification(
 
     // If user is signed in, notify them that their feedback was received
     if (userId) {
-      const userNotification = await NotificationsService.createNotification({
-        type: 'system',
+      const userNotification = await createNotification({
+        isRead: false,
+      type: 'system',
         title: 'Feedback Received',
         message: `Thank you for your feedback: "${feedbackTitle}". We'll review it and get back to you.`,
         severity: 'success',
@@ -102,7 +104,8 @@ export async function sendFeedbackUpdatedNotification(
       message += ` Admin response: ${adminResponse}`;
     }
 
-    const notification = await NotificationsService.createNotification({
+    const notification = await createNotification({
+      isRead: false,
       type: 'system',
       title,
       message,
@@ -135,7 +138,8 @@ export async function sendFeedbackResponseNotification(
   adminResponse: string
 ) {
   try {
-    const notification = await NotificationsService.createNotification({
+    const notification = await createNotification({
+      isRead: false,
       type: 'system',
       title: 'Response to Your Feedback',
       message: `We've responded to your feedback "${feedbackTitle}". Check it out!`,

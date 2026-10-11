@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { UserIcon } from "lucide-react";
 import Image from "next/image";
 
@@ -13,19 +13,19 @@ export const userType = defineType({
       title: 'Clerk ID',
       type: 'string',
       description: 'The Clerk user ID',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'username',
       title: 'Username',
       type: 'string',
-      validation: (Rule: ValidationRule) => Rule.required().min(3).max(50),
+      validation: (Rule) => Rule.required().min(3).max(50),
     }),
     defineField({
       name: 'email',
       title: 'Email',
       type: 'string',
-      validation: (Rule: ValidationRule) => Rule.required().email(),
+      validation: (Rule) => Rule.required().email(),
     }),
     defineField({
       name: 'imageURL',
@@ -53,7 +53,7 @@ export const userType = defineType({
         layout: 'radio'
       },
       initialValue: 'member',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'joinedAt',
@@ -61,7 +61,7 @@ export const userType = defineType({
       type: 'datetime',
       description: 'When the user joined',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'isActive',
@@ -344,7 +344,7 @@ export const userType = defineType({
         ],
         layout: 'radio'
       },
-      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(document?.role),
+      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(typeof document?.role === 'string' ? document.role : ''),
     }),
     defineField({
       name: 'specializations',
@@ -371,7 +371,7 @@ export const userType = defineType({
           'Archaeology'
         ]
       },
-      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(document?.role),
+      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(typeof document?.role === 'string' ? document.role : ''),
     }),
     defineField({
       name: 'qualifications',
@@ -379,14 +379,14 @@ export const userType = defineType({
       type: 'array',
       description: 'Academic qualifications and degrees',
       of: [{type: 'string'}],
-      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(document?.role),
+      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(typeof document?.role === 'string' ? document.role : ''),
     }),
     defineField({
       name: 'experience',
       title: 'Years of Experience',
       type: 'number',
       description: 'Number of years of teaching experience',
-      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(document?.role),
+      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(typeof document?.role === 'string' ? document.role : ''),
     }),
     defineField({
       name: 'rating',
@@ -394,7 +394,7 @@ export const userType = defineType({
       type: 'number',
       description: 'Average rating from students (1-5)',
       validation: (Rule) => Rule.min(1).max(5),
-      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(document?.role),
+      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(typeof document?.role === 'string' ? document.role : ''),
     }),
     defineField({
       name: 'totalStudents',
@@ -402,7 +402,7 @@ export const userType = defineType({
       type: 'number',
       description: 'Total number of students taught',
       initialValue: 0,
-      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(document?.role),
+      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(typeof document?.role === 'string' ? document.role : ''),
     }),
     defineField({
       name: 'coursesCreated',
@@ -410,14 +410,14 @@ export const userType = defineType({
       type: 'number',
       description: 'Number of courses created by this teacher',
       initialValue: 0,
-      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(document?.role),
+      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(typeof document?.role === 'string' ? document.role : ''),
     }),
     defineField({
       name: 'youtubeChannelId',
       title: 'YouTube Channel ID',
       type: 'string',
       description: 'The YouTube channel ID for the teacher\'s ministry channel (e.g. UCxxxxxxxxxxxxxxxxxxxxxxxx). Used to fetch new videos.',
-      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(document?.role),
+      hidden: ({document}) => !['teacher', 'junior_teacher', 'senior_teacher', 'lead_teacher'].includes(typeof document?.role === 'string' ? document.role : ''),
     }),
   ],
   preview: {

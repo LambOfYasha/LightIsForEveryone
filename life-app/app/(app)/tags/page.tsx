@@ -20,7 +20,7 @@ export default async function TagsPage() {
     }
   `);
   
-  const tags = await client.fetch(query);
+  const tags = await client.fetch<{ _id: string; name: string; slug?: string; color: string; description?: string; createdAt?: string; _createdAt: string }[]>(query);
 
   return (
     <div className="container mx-auto px-4 py-6 sm:py-8">

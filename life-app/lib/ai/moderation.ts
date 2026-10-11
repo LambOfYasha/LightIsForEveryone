@@ -5,12 +5,13 @@ export interface ModerationResult {
   confidence: number;
   flags: string[];
   reason?: string;
+  customGuidelineApplied?: { guidelineId: string; guidelineName: string; matchedKeywords: string[]; matchedPatterns: string[]; confidence: number };
   suggestedAction: 'allow' | 'flag' | 'block';
 }
 
 export interface ContentModerationRequest {
   content: string;
-  contentType: 'post' | 'response' | 'comment';
+  contentType: 'post' | 'response' | 'comment' | 'blog' | 'community';
   userId: string;
   userRole: string;
 }

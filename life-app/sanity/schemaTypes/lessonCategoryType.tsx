@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { FolderOpen } from "lucide-react";
 
 export const lessonCategoryType = defineType({
@@ -12,7 +12,7 @@ export const lessonCategoryType = defineType({
       title: 'Title',
       type: 'string',
       description: 'The name of the category (e.g. Fundamentals, Law, Live Stream)',
-      validation: (Rule: ValidationRule) => Rule.required().min(2).max(100),
+      validation: (Rule) => Rule.required().min(2).max(100),
     }),
     defineField({
       name: 'slug',
@@ -22,7 +22,7 @@ export const lessonCategoryType = defineType({
       options: {
         source: 'title',
       },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'description',
@@ -30,7 +30,7 @@ export const lessonCategoryType = defineType({
       type: 'text',
       description: 'A brief description of this category',
       rows: 3,
-      validation: (Rule: ValidationRule) => Rule.max(500),
+      validation: (Rule) => Rule.max(500),
     }),
     defineField({
       name: 'sortOrder',
@@ -59,7 +59,7 @@ export const lessonCategoryType = defineType({
       type: 'datetime',
       description: 'When this category was created',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',

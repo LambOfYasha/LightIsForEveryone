@@ -5,6 +5,7 @@ export interface CommunityWithModerator {
   _id: string;
   title: string;
   slug: string;
+  categories?: string[];
   description?: string;
   image?: {
     asset: {
@@ -24,7 +25,8 @@ const getCommunitiesQuery = defineQuery(`
   *[_type == "communityQuestion" && (isDeleted == false || isDeleted == null)] | order(createdAt desc) {
     _id,
     title,
-    slug,
+    "slug": slug.current,
+    categories,
     description,
     image,
     "moderator": moderator->{

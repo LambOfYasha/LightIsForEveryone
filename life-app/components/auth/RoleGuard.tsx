@@ -9,13 +9,15 @@ type PermissionType = 'canCreatePosts' | 'canComment' | 'canCreateCommunities' |
 interface RoleGuardProps {
   children: ReactNode;
   requiredRole?: UserRole;
+  allowedRoles?: UserRole[];
   permission?: PermissionType;
   fallback?: ReactNode;
 }
 
 export function RoleGuard({ 
   children, 
-  requiredRole, 
+  requiredRole,
+  allowedRoles,
   permission, 
   fallback = null 
 }: RoleGuardProps) {
@@ -28,6 +30,8 @@ export function RoleGuard({
   if (!isAuthenticated) {
     return fallback;
   }
+
+  if (allowedRoles && (!user || !allowedRoles.includes(user.role))) return fallback;
 
   if (requiredRole && !hasRoleOrHigher(requiredRole)) {
     return fallback;

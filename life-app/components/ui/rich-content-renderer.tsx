@@ -32,7 +32,7 @@ const allowedInlineStyleProperties = new Set([
 export default function RichContentRenderer({ content, className, stripThemeConflictingInlineStyles = false }: RichContentRendererProps) {
   // Process and sanitize the content
   const processContent = (value: string | any[]) => {
-    let processed = richTextContentToHtml(value);
+    const processed = richTextContentToHtml(value);
     
     // Sanitize the content to prevent XSS attacks
     const sanitized = processed

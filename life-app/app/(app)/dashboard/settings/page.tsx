@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { 
   Settings,
   User,
@@ -28,6 +29,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
+  if (!user) redirect("/sign-in");
 
   return (
     <div className="p-4 sm:p-6">

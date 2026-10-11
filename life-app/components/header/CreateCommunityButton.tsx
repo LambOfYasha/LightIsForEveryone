@@ -137,7 +137,7 @@ const handleCreateCommunity = async (e: React.FormEvent<HTMLFormElement>) => {
       // But createCommunityQuestion expects string | null | undefined for image
       // If imageFile is a File, you need to upload it first and get a URL or asset ref
       // For now, pass undefined if no image, or handle upload here if needed
-      let image: string | null | undefined = undefined
+      const image: string | null | undefined = undefined
       if (imageFile instanceof File) {
         // You need to upload the file and get a URL or asset ref string
         // For now, just set image to undefined (or handle upload logic here)

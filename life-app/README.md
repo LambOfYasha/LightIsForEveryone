@@ -539,20 +539,22 @@ The installed Sanity 5.8.1 CLI confirms `sanity schema extract` and `sanity type
 
 ESLint uses `eslint.config.mjs`; its Next.js presets and the six existing warning-level overrides are verified through the effective configuration. Generated Next.js, Clerk state, build outputs, coverage, and generated Sanity types are ignored. Do not add broad source ignores or downgrade errors to make the report pass.
 
-Builds still use the pre-existing `typescript.ignoreBuildErrors` setting and do not run lint. Run lint and typecheck separately; command repair does not certify the application as release-ready. The lint/type defects and mandatory provider configuration are separate follow-up work.
+The table above records the tooling-only baseline before the release repair. That baseline used `typescript.ignoreBuildErrors: true` and did not run lint during builds. The current scripts enforce both gates and the bypass has been removed. See the release status below for current results.
 
 ## Scripts
 
 | Script | Purpose |
 | --- | --- |
 | `pnpm run dev` | Start the Next.js dev server |
-| `pnpm run build` | Standard production build |
+| `pnpm run build` | Require `check`, then compile the production build |
 | `pnpm run build:prod` | Cross-platform compatibility alias for `pnpm run build` |
 | `pnpm run build:force` | Compatibility alias for `pnpm run build`; does not force success or clear caches |
 | `pnpm run start` | Start the production server |
 | `pnpm run lint` | Run ESLint directly using the native flat config |
 | `pnpm run lint:fix` | Apply supported ESLint fixes; review the diff afterward |
-| `pnpm run typecheck` | Run TypeScript without emitting files or incremental artifacts |
+| `pnpm run typecheck` | Generate Next.js route types, then run strict TypeScript without emitting files or incremental artifacts |
+| `pnpm run check` | Run the mandatory lint and typecheck gates |
+| `pnpm run test:regression` | Run offline auth and reporting regression checks |
 | `pnpm run typegen` | Extract and generate Sanity schema typings |
 
 ## Maintenance mode
@@ -574,8 +576,8 @@ The change takes effect on the next request. Use maintenance mode during deploym
 ## Deployment notes
 
 - Vercel is the original default host and reads `vercel.json`, but self-hosted installs can ignore that file.
-- Linux self-hosting is supported with a standard `next build` plus `next start` workflow behind a reverse proxy.
-- `pnpm run build`, `pnpm run build:prod`, and `pnpm run build:force` use the same cross-platform Next.js build command.
+- Linux self-hosting uses a gated `pnpm run build` plus `pnpm run start` workflow behind a reverse proxy.
+- All production build aliases run lint and fresh route-aware typechecking before compilation. `build:force` cannot bypass the gates.
 - `next.config.ts` allows remote images from Clerk and Sanity CDNs.
 - `instrumentation.ts` guards server rendering against Node `localStorage` issues.
 - The Clerk webhook endpoint is `/api/webhooks/clerk`.
@@ -627,7 +629,16 @@ That route reads teacher channel IDs from Sanity and then fetches recent uploads
 
 ## Changelog
 
-### 2026-10-08 — tooling command repair
+### 2026-10-11 — release gates and contract repairs
+
+- Documented and removed the inherited TypeScript build bypass. Every build alias now requires lint and fresh route-aware typechecking; CI runs both checks as separate steps plus offline regression tests.
+- Removed a local `sanity` declaration that shadowed package types with `any`. Schema callbacks now use real contextual types. Repaired reference/projection contracts, missing imports, button variants, awaited request APIs and nullable guest data.
+- Production environment flags previously returned fabricated users for unauthenticated requests. Removed those identities so privileged guards fail closed. Auth regression tests cover guest access, missing records and provider failure.
+- Feedback notifications now call the document API rather than passing document payloads to the template API. Admin blog editing supplies its required authorized server action. Comment queries project author roles at every nesting depth.
+- Fixed unstable editor toolbar identities, hydration state updates, internal navigation and broken popover positioning by reusing the existing Radix wrapper. Applied safe `prefer-const` repairs.
+- Reporting exports the count shapes actually supplied by analytics, computes appeal rate separately from approval rate, removes random flag counts and rejects unsupported quarter/year periods. Existing mock analytics and export stubs still need separate production implementation.
+
+### 2026-10-08 — tooling command repair (historical baseline)
 
 - Replaced removed `next lint` scripts and the legacy preset compatibility wrapper with the ESLint CLI and native Next.js flat presets. Moved the existing warning policy into the active config and removed the redundant legacy config.
 - Removed the unsupported Next.js `eslint` build option; lint runs as a separate check.
@@ -678,3 +689,28 @@ Branch-specific rules and contribution workflow live in [`CONTRIBUTING.md`](./CO
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) for contribution workflow, branch rules, and collaboration expectations
 - `Project_Overview.md` for deeper architecture notes, implementation history, and subsystem summaries
 - [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for framework-specific deployment guidance
+
+## Release status — 2026-10-11
+
+The audited baseline set `typescript.ignoreBuildErrors: true`, allowing compilation despite 198 type diagnostics and 32 lint errors. The bypass is now removed. `pnpm run check` must pass before all production builds, and Next.js's own build type validation remains enabled.
+
+[LIFE quality gates](../.github/workflows/life-quality.yml) runs a frozen install, lint, fresh route generation/typecheck and offline regression tests on LIFE pull requests and main pushes. A maintainer must mark the `quality` job required in branch protection to prevent merging failed checks. This workflow does not change repository settings.
+
+Lint warnings remain visible technical debt; errors block the gate. Static-check success alone does not establish release readiness. Release approval also requires a successful configured production build, runtime checks for guest/member/admin paths, provider outage/maintenance-backup checks and review of mock reporting behavior. Clerk and Sanity remain active dependencies until the separate LOY migration supplies the primary path; they should ultimately serve as deliberately selected maintenance backups.
+
+### Verified commands — October 11, 2026
+
+Linux, Node 24.19.0, pnpm 10.12.4; no production credentials supplied. Select the pinned runner with `npx --yes pnpm@10.12.4` if your global pnpm differs.
+
+| Command / check | Observed result |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | Passed; dependencies and both lockfiles unchanged |
+| `pnpm run lint` | Passed: 0 errors, 777 visible warnings |
+| `pnpm run typecheck` | Fresh route generation and strict TypeScript passed with no diagnostics |
+| `pnpm run test:regression` | All 4 offline regression tests passed |
+| `pnpm run build:force` with a temporary lint failure | Rejected before compilation; probe removed afterward |
+| `pnpm run build:prod` with a temporary type error | Rejected before compilation; probe removed afterward |
+| `pnpm run build` | Both gates passed, compiled in 27.2 seconds, Next.js type validation passed; page-data collection failed on missing `NEXT_PUBLIC_SANITY_DATASET` at `/api/admin/analytics` |
+| `git diff --check` | Passed |
+
+Sanity schema generation remains a separate, previously blocked command. `next typegen` generates Next.js route types and does not replace Sanity schema generation. These results do not approve a release, merge or deployment.
