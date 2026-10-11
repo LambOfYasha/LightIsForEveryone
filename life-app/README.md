@@ -697,3 +697,20 @@ The audited baseline set `typescript.ignoreBuildErrors: true`, allowing compilat
 [LIFE quality gates](../.github/workflows/life-quality.yml) runs a frozen install, lint, fresh route generation/typecheck and offline regression tests on LIFE pull requests and main pushes. A maintainer must mark the `quality` job required in branch protection to prevent merging failed checks. This workflow does not change repository settings.
 
 Lint warnings remain visible technical debt; errors block the gate. Static-check success alone does not establish release readiness. Release approval also requires a successful configured production build, runtime checks for guest/member/admin paths, provider outage/maintenance-backup checks and review of mock reporting behavior. Clerk and Sanity remain active dependencies until the separate LOY migration supplies the primary path; they should ultimately serve as deliberately selected maintenance backups.
+
+### Verified commands — October 11, 2026
+
+Linux, Node 24.19.0, pnpm 10.12.4; no production credentials supplied. Select the pinned runner with `npx --yes pnpm@10.12.4` if your global pnpm differs.
+
+| Command / check | Observed result |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | Passed; dependencies and both lockfiles unchanged |
+| `pnpm run lint` | Passed: 0 errors, 777 visible warnings |
+| `pnpm run typecheck` | Fresh route generation and strict TypeScript passed with no diagnostics |
+| `pnpm run test:regression` | All 4 offline regression tests passed |
+| `pnpm run build:force` with a temporary lint failure | Rejected before compilation; probe removed afterward |
+| `pnpm run build:prod` with a temporary type error | Rejected before compilation; probe removed afterward |
+| `pnpm run build` | Both gates passed, compiled in 27.2 seconds, Next.js type validation passed; page-data collection failed on missing `NEXT_PUBLIC_SANITY_DATASET` at `/api/admin/analytics` |
+| `git diff --check` | Passed |
+
+Sanity schema generation remains a separate, previously blocked command. `next typegen` generates Next.js route types and does not replace Sanity schema generation. These results do not approve a release, merge or deployment.
