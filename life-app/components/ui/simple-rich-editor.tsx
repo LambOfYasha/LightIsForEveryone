@@ -103,11 +103,6 @@ export default function SimpleRichEditor({
   const linkSelectionRef = useRef<{ from: number; to: number } | null>(null);
   const linkWasActiveRef = useRef(false);
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -361,7 +356,7 @@ export default function SimpleRichEditor({
     editor?.chain().focus().insertContent('<hr style="margin: 2rem 0; border: none; border-top: 2px solid #e5e7eb;">').run();
   };
 
-  const MenuBar = () => {
+  const renderMenuBar = () => {
     if (!editor) {
       return null;
     }
@@ -779,7 +774,7 @@ export default function SimpleRichEditor({
     };
   }, [showColorPicker, showFontSizePicker, showFontFamilyPicker]);
 
-  if (!mounted || !editor) {
+  if (!editor) {
     return (
       <div className={cn("border border-gray-300 rounded-md p-4 min-h-[200px] bg-gray-50 flex items-center justify-center", className)}>
         <div className="text-gray-500">Loading editor...</div>
@@ -789,7 +784,7 @@ export default function SimpleRichEditor({
 
   return (
     <div className={cn("border rounded-md overflow-hidden", className)}>
-      {!readOnly && <MenuBar />}
+      {!readOnly && renderMenuBar()}
       <div 
         className="max-h-[600px] overflow-y-auto"
         style={{ maxHeight }}

@@ -91,7 +91,7 @@ export default function AppealButton({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant={variant} size={size}>
+        <Button variant={variant} size={size === "md" ? "default" : size}>
           <Scale className="w-4 h-4 mr-2" />
           Appeal Decision
         </Button>

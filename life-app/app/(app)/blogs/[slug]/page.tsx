@@ -36,8 +36,9 @@ import { canEditContent, canDeleteContent } from "@/lib/auth/roles";
 // Force dynamic rendering to avoid static generation issues
 export const dynamic = 'force-dynamic';
 
-interface BlogWithAuthor extends Omit<Blog, 'author'> {
+interface BlogWithAuthor extends Omit<Blog, 'author' | 'tags' | 'slug'> {
   author?: Teacher;
+  slug: string;
   viewCount?: number;
   tags?: Array<{
     _id: string;
@@ -149,7 +150,7 @@ export default async function BlogPage({
     description: blog.description || '',
     slug: {
       _type: 'slug',
-      current: typeof blog.slug === 'string' ? blog.slug : blog.slug?.current || ''
+      current: blog.slug || ''
     },
     content: blog.content || '',
     image: blog.image,

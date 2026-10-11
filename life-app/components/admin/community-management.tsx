@@ -379,9 +379,9 @@ export default function CommunityManagement() {
             communityId,
             updates
           })
-        }).then(response => {
+        }).then(async response => {
           if (!response.ok) {
-            const errorData = response.json();
+            const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to update community');
           }
           return response.json();
@@ -708,7 +708,7 @@ export default function CommunityManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Link href={`/community-questions/${community.slug?.current || community.slug}`}>
+                          <Link href={`/community-questions/${typeof community.slug === 'string' ? community.slug : community.slug?.current}`}>
                             <Button size="sm" variant="outline">
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -860,7 +860,7 @@ export default function CommunityManagement() {
                   </div>
                   <div>
                     <label className="text-sm font-medium">Slug</label>
-                    <p className="text-sm text-gray-600">{selectedCommunity.slug}</p>
+                    <p className="text-sm text-gray-600">{typeof selectedCommunity.slug === 'string' ? selectedCommunity.slug : selectedCommunity.slug?.current}</p>
                   </div>
                 </div>
               </div>
@@ -883,7 +883,7 @@ export default function CommunityManagement() {
               </div>
 
               <div className="flex justify-end space-x-2">
-                <Link href={`/community-questions/${selectedCommunity.slug}`}>
+                <Link href={`/community-questions/${typeof selectedCommunity.slug === 'string' ? selectedCommunity.slug : selectedCommunity.slug?.current}`}>
                   <Button>
                     <Eye className="w-4 h-4 mr-2" />
                     View Community

@@ -111,8 +111,8 @@ export interface ManagementConfig {
   additionalFilters?: { key: string; label: string; options: { value: string; label: string }[] }[];
   additionalColumns?: { key: string; label: string; render: (item: any) => React.ReactNode }[];
   profileFields?: ProfileField[];
-  getRoleBadgeVariant: (role: string) => string;
-  getStatusBadgeVariant: (item: any) => string;
+  getRoleBadgeVariant: (role: string) => React.ComponentProps<typeof Badge>["variant"];
+  getStatusBadgeVariant: (item: any) => React.ComponentProps<typeof Badge>["variant"];
   loadData: (filters: any) => Promise<any>;
   updateRole: (id: string, role: string) => Promise<any>;
   toggleStatus: (id: string, active: boolean) => Promise<any>;
@@ -435,7 +435,7 @@ export default function SharedManagement({ config, initialData = [] }: SharedMan
             {config.additionalFilters?.map((filter) => (
               <Select 
                 key={filter.key}
-                value={filters[filter.key as keyof BaseFilters] || 'all'} 
+                value={String(filters[filter.key as keyof BaseFilters] || 'all')}
                 onValueChange={(value) => handleFilterChange(filter.key as keyof BaseFilters, value)}
               >
                 <SelectTrigger>

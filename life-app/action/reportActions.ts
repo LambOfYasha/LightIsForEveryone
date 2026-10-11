@@ -62,19 +62,9 @@ export async function exportReport(reportId: string, format: string) {
         customGuidelinesUsed: 3
       },
       details: {
-        byContentType: {
-          post: { total: 80, allowed: 65, flagged: 10, blocked: 5, averageConfidence: 0.87 },
-          comment: { total: 70, allowed: 55, flagged: 10, blocked: 5, averageConfidence: 0.83 }
-        },
-        byUserRole: {
-          user: { total: 120, allowed: 95, flagged: 15, blocked: 10 },
-          teacher: { total: 30, allowed: 25, flagged: 5, blocked: 0 }
-        },
-        topFlags: [
-          { flag: 'spam', count: 8, percentage: 40 },
-          { flag: 'inappropriate', count: 6, percentage: 30 },
-          { flag: 'offensive', count: 6, percentage: 30 }
-        ],
+        byContentType: { post: 80, comment: 70, response: 0, blog: 0, community: 0 },
+        byUserRole: { user: 120, teacher: 30, admin: 0 },
+        topFlags: ['spam', 'inappropriate', 'offensive'],
         timeSeries: [
           { date: '2024-01-01', total: 20, allowed: 16, flagged: 3, blocked: 1 },
           { date: '2024-01-02', total: 25, allowed: 20, flagged: 4, blocked: 1 },
@@ -97,7 +87,7 @@ export async function exportReport(reportId: string, format: string) {
         customGuidelines: {
           total: 5,
           active: 3,
-          usageCount: 45,
+          byCategory: {},
           averageSuccessRate: 0.87
         }
       },

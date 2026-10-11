@@ -1,4 +1,10 @@
-import type { ImageAsset, PortableTextBlock } from '@sanity/types'
+import type { PortableTextBlock } from 'sanity'
+
+export interface Reference {
+  _type: 'reference'
+  _ref: string
+  _weak?: boolean
+}
 
 export interface SanityDocument {
   _id: string
@@ -57,8 +63,8 @@ export interface User extends SanityDocument {
       reducedMotion: boolean
     }
   }
-  blog?: Reference<'blog'>
-  communityQuestion?: Reference<'communityQuestion'>
+  blog?: Reference
+  communityQuestion?: Reference
   teacherRole?: 'teacher' | 'junior_teacher' | 'senior_teacher' | 'lead_teacher'
   specializations?: string[]
   qualifications?: string[]
@@ -82,10 +88,12 @@ export interface Teacher extends SanityDocument {
 
 export interface Blog extends SanityDocument {
   _type: 'blog'
+  tags?: Reference[]
   title: string
   description?: string
   content: string | PortableTextBlock[]
   slug: {
+    _type?: 'slug'
     current: string
   }
   author: {
@@ -110,6 +118,7 @@ export interface Page extends SanityDocument {
   description?: string
   content: string | PortableTextBlock[]
   slug: {
+    _type?: 'slug'
     current: string
   }
   isPublished: boolean
@@ -122,6 +131,7 @@ export interface CommunityQuestion extends SanityDocument {
   title: string
   description?: string
   slug: {
+    _type?: 'slug'
     current: string
   }
   moderator: {
@@ -144,6 +154,7 @@ export interface Post extends SanityDocument {
   title: string
   body: PortableTextBlock[]
   slug: {
+    _type?: 'slug'
     current: string
   }
   author: {
@@ -260,6 +271,7 @@ export interface BlogReference {
   _id: string
   title: string
   slug: {
+    _type?: 'slug'
     current: string
   }
 }
@@ -268,6 +280,7 @@ export interface CommunityQuestionReference {
   _id: string
   title: string
   slug: {
+    _type?: 'slug'
     current: string
   }
 }
@@ -276,6 +289,7 @@ export interface PostReference {
   _id: string
   title: string
   slug: {
+    _type?: 'slug'
     current: string
   }
 }
@@ -286,26 +300,26 @@ export interface CommentReference {
 }
 
 // Extended types for API responses
-export interface BlogWithAuthor extends Blog {
+export interface BlogWithAuthor extends Omit<Blog, 'author'> {
   author: UserReference
 }
 
-export interface CommunityQuestionWithModerator extends CommunityQuestion {
+export interface CommunityQuestionWithModerator extends Omit<CommunityQuestion, 'moderator'> {
   moderator: UserReference | TeacherReference
 }
 
-export interface PostWithAuthor extends Post {
+export interface PostWithAuthor extends Omit<Post, 'author' | 'communityQuestion' | 'approvedBy'> {
   author: UserReference
   communityQuestion: CommunityQuestionReference
   approvedBy?: UserReference | TeacherReference
 }
 
-export interface CommentWithAuthor extends Comment {
+export interface CommentWithAuthor extends Omit<Comment, 'author' | 'post'> {
   author: UserReference
   post: PostReference | BlogReference
 }
 
-export interface ReportWithDetails extends Report {
+export interface ReportWithDetails extends Omit<Report, 'reporter' | 'reportedContent' | 'reviewedBy'> {
   reporter: UserReference | TeacherReference
   reportedContent: PostReference | CommentReference | BlogReference | CommunityQuestionReference | UserReference | TeacherReference
   reviewedBy?: UserReference | TeacherReference

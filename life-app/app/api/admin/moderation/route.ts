@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     console.log("Query parameters:", { status, contentType, page, limit });
 
     // Build the GROQ query with filters
-    let filterConditions = ['_type == "report"'];
+    const filterConditions = ['_type == "report"'];
     
     if (status !== 'all') {
       filterConditions.push(`status == "${status}"`);

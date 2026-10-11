@@ -9,15 +9,13 @@ import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 
 interface TagPageProps {
-  params: {
-    slug: string;
-  };
+  params: Promise<{ slug: string }>;
 }
 
 export default async function TagPage({ params }: TagPageProps) {
-  const { slug } = params;
+  const { slug } = await params;
   
-  try {
+  {
     // Get tag info directly
     const tagQuery = defineQuery(`
       *[_type == "tag" && slug.current == $slug][0] {
@@ -33,7 +31,10 @@ export default async function TagPage({ params }: TagPageProps) {
     const [blogs, tagInfo] = await Promise.all([
       getBlogsByTag(slug),
       client.fetch(tagQuery, { slug })
-    ]);
+    ]).catch((error: unknown) => {
+      console.error("Error fetching tag data:", error);
+      notFound();
+    });
 
     if (!tagInfo) {
       notFound();
@@ -101,8 +102,5 @@ export default async function TagPage({ params }: TagPageProps) {
         )}
       </div>
     );
-  } catch (error) {
-    console.error('Error fetching tag data:', error);
-    notFound();
   }
 } 

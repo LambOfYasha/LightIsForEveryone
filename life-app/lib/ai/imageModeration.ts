@@ -9,6 +9,8 @@ export interface ImageModerationRequest {
 }
 
 export interface ImageModerationResult extends ModerationResult {
+  description?: string;
+  content?: string[];
   imageAnalysis?: {
     description: string;
     content: string[];

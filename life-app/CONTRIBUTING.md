@@ -167,3 +167,9 @@ This repo currently exposes `pnpm run lint`, `pnpm run build`, `pnpm run typeche
 - `README.md` covers product overview, architecture summary, setup, and branch map.
 - `CONTRIBUTING.md` covers contribution rules, branch rules, and workflow.
 - `Project_Overview.md` covers deeper engineering and architecture context.
+
+## Mandatory release gates
+
+Use Node 24 and pnpm 10.12.4. From `life-app`, run `pnpm install --frozen-lockfile`, `pnpm run check`, `pnpm run test:regression`, then `pnpm run build` with valid application configuration. The build requires lint and `next typegen` plus strict TypeScript before compilation. `build:prod` and `build:force` delegate to the same gated build. Do not restore `ignoreBuildErrors`, add broad source ignores or downgrade errors to claim readiness.
+
+Record lint errors and warnings separately. CI has explicit lint/typecheck steps plus regression tests; maintainers should require `quality` in branch protection. Report production build and runtime outcomes separately from static-check success. Provider independence and existing mock reporting need their own review.

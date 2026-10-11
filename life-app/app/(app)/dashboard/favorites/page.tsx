@@ -17,17 +17,15 @@ export default async function FavoritesPage() {
   const favoritesResult = await getUserFavoritesAction();
   const favorites = favoritesResult.favorites || [];
   
-  if ('error' in favorites) {
+  if (favoritesResult.error) {
     return (
       <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
             <h2 className="text-xl font-semibold mb-2">Unable to Load Favorites</h2>
-            <p className="text-muted-foreground mb-4">{favorites.error}</p>
-            <Button onClick={() => window.location.reload()}>
-              Try Again
-            </Button>
+            <p className="text-muted-foreground mb-4">{favoritesResult.error}</p>
+            <Button asChild><Link href="/dashboard/favorites">Try Again</Link></Button>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { Settings } from "lucide-react";
 
 export const adminSettingsType = defineType({
@@ -13,7 +13,7 @@ export const adminSettingsType = defineType({
       title: 'Site Name',
       type: 'string',
       description: 'The name of the website',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'siteDescription',
@@ -244,7 +244,7 @@ export const adminSettingsType = defineType({
       type: 'datetime',
       description: 'When these settings were created',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'createdBy',

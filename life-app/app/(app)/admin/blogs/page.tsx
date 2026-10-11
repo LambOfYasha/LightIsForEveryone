@@ -16,6 +16,7 @@ import Link from "next/link";
 import CreateBlogButton from "@/components/header/CreateBlogButton";
 import EditBlogButton from "@/components/blog/EditBlogButton";
 import DeleteBlogButton from "@/components/blog/DeleteBlogButton";
+import { editBlog } from "@/action/editBlog";
 import { deleteBlog } from "@/action/deleteBlog";
 import { getBlogs } from "@/sanity/lib/blogs/getBlogs";
 import { formatViewCount } from '@/lib/utils';
@@ -150,6 +151,14 @@ export default async function AdminBlogsPage() {
                   </Link>
                   <EditBlogButton 
                     blog={blog}
+                    onEdit={async (data) => {
+                      'use server';
+                      const imageData = data.imageBase64 && data.imageFilename && data.imageContentType
+                        ? { base64: data.imageBase64, fileName: data.imageFilename, contentType: data.imageContentType }
+                        : null;
+                      const result = await editBlog(blog._id, data.title, data.description, data.slug, data.content, imageData, data.tags);
+                      if ('error' in result) throw new Error(result.error);
+                    }}
                   />
                   <DeleteBlogButton 
                     blogId={blog._id}

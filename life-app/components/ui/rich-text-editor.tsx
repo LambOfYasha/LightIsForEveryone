@@ -229,7 +229,7 @@ export default function RichTextEditor({
     editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   };
 
-  const MenuBar = () => {
+  const renderMenuBar = () => {
     if (!editor) {
       return null;
     }
@@ -616,7 +616,7 @@ export default function RichTextEditor({
 
   return (
     <div className={cn("border border-gray-300 rounded-md overflow-hidden", className)}>
-      {!readOnly && <MenuBar />}
+      {!readOnly && renderMenuBar()}
       <div 
         className="p-4 min-h-[200px] max-h-[600px] overflow-y-auto"
         style={{ maxHeight }}

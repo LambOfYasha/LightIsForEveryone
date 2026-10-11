@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { BookIcon } from "lucide-react";
 
 
@@ -13,7 +13,7 @@ export const blogType = defineType({
             title: 'Title', 
             type: 'string',
             description: 'The title of the blog',
-            validation: (Rule: ValidationRule) => Rule.required().min(3).max(100),
+            validation: (Rule) => Rule.required().min(3).max(100),
         }),
         defineField({
             name: 'slug',
@@ -27,7 +27,7 @@ export const blogType = defineType({
             title: 'Description',
             type: 'text',
             description: 'The description of the blog',
-            validation: (Rule: ValidationRule) => Rule.required(),
+            validation: (Rule) => Rule.required(),
         }),
         defineField({
             name: 'image',
@@ -48,7 +48,7 @@ export const blogType = defineType({
             title: 'Content',
             type: 'text',
             description: 'The content of the blog (HTML)',
-            validation: (Rule: ValidationRule) => Rule.required(),
+            validation: (Rule) => Rule.required(),
         }),
         defineField({
             name: 'author',
@@ -56,7 +56,7 @@ export const blogType = defineType({
             type: 'reference',
             to: [{type: 'teacher'}, {type: 'user'}],
             description: 'The author of the blog (can be a teacher or user)',
-            validation: (Rule: ValidationRule) => Rule.required(),
+            validation: (Rule) => Rule.required(),
         }),
         defineField({
             name: 'createdAt',
@@ -64,7 +64,7 @@ export const blogType = defineType({
             type: 'datetime',
             description: 'The date and time the blog was created',
             initialValue: new Date().toISOString(),
-            validation: (Rule: ValidationRule) => Rule.required(),
+            validation: (Rule) => Rule.required(),
         }),
         defineField({
             name: 'comments',
@@ -86,7 +86,7 @@ export const blogType = defineType({
             type: 'number',
             description: 'Number of views this blog post has received',
             initialValue: 0,
-            validation: (Rule: ValidationRule) => Rule.min(0),
+            validation: (Rule) => Rule.min(0),
         }),
     ],
     preview: {

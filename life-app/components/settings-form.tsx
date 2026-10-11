@@ -291,7 +291,7 @@ export function SettingsForm({ user }: SettingsFormProps) {
     setHasUnsavedChanges(true);
   };
 
-  const handleAppearanceChange = (key: string, value: string) => {
+  const handleAppearanceChange = (key: "theme" | "fontSize", value: string) => {
     const currentAppearance = appearance || {
       theme: 'light',
       fontSize: 'medium',

@@ -234,7 +234,10 @@ export default function TeacherManagement({ initialTeachers = [] }: TeacherManag
       },
     ],
     loadData: getAllTeachers,
-    updateRole: updateTeacherRole,
+    updateRole: async (id: string, role: string) => {
+      if (role === 'lead_teacher' || role === 'teacher' || role === 'junior_teacher' || role === 'senior_teacher') return updateTeacherRole(id, role);
+      return { success: false, error: 'Invalid role' };
+    },
     toggleStatus: toggleTeacherStatus,
     deleteItem: deleteTeacher,
     bulkUpdate: bulkUpdateTeachers,

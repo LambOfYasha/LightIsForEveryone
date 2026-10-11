@@ -43,7 +43,7 @@ export default async function BlogsPage() {
             <p className="text-muted-foreground">Discover insightful articles and teachings</p>
           </div>
          <div className="flex items-center gap-2">
-          {(user.role === "admin" || user.role === "teacher" || user.role === "junior_teacher" || user.role === "senior_teacher" || user.role === "lead_teacher") && (
+          {(user && (user.role === "admin" || user.role === "teacher" || user.role === "junior_teacher" || user.role === "senior_teacher" || user.role === "lead_teacher")) && (
             <CreateBlogButton />
           )}
           </div>

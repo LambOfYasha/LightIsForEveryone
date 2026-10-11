@@ -123,6 +123,7 @@ export default function CommunityModeration() {
           reporterName: 'Jane Smith',
           reportType: 'spam',
           description: 'Multiple spam posts detected',
+          createdAt: '2024-01-15T10:45:00Z',
           status: 'reviewed',
           reviewedAt: '2024-01-15T11:00:00Z',
           reviewedBy: 'admin1',

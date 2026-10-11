@@ -17,7 +17,7 @@ import { richTextContentToHtml } from '@/lib/utils';
 interface Blog {
   _id: string;
   title: string;
-  slug: { current: string };
+  slug: string | { current: string };
   description: string;
   content: string | any[];
   image?: {
@@ -58,7 +58,7 @@ export default function EditBlogButton({ blog, onEdit }: EditBlogButtonProps) {
   };
 
   const [title, setTitle] = useState(blog.title);
-  const [slug, setSlug] = useState(blog.slug.current);
+  const [slug, setSlug] = useState((typeof blog.slug === 'string' ? blog.slug : blog.slug.current));
   const [description, setDescription] = useState(blog.description);
   const [content, setContent] = useState(convertContentToHtml(blog.content));
   
@@ -117,7 +117,7 @@ export default function EditBlogButton({ blog, onEdit }: EditBlogButtonProps) {
     setTitle(value);
     
     // Auto-generate slug if it matches the original title's slug
-    if (slug === blog.slug.current) {
+    if (slug === (typeof blog.slug === 'string' ? blog.slug : blog.slug.current)) {
       const newSlug = value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '').slice(0, 50);
       setSlug(newSlug);
     }
@@ -147,7 +147,7 @@ export default function EditBlogButton({ blog, onEdit }: EditBlogButtonProps) {
 
   const resetForm = () => {
     setTitle(blog.title);
-    setSlug(blog.slug.current);
+    setSlug((typeof blog.slug === 'string' ? blog.slug : blog.slug.current));
     setDescription(blog.description);
     setContent(convertContentToHtml(blog.content));
     setImagePreview(null);

@@ -111,7 +111,7 @@ export default async function QuestionsPage() {
               <CardContent>
                 <div className="text-xl sm:text-2xl font-bold">
                   {communities.filter(c => {
-                    const createdAt = new Date(c.createdAt);
+                    const createdAt = new Date(c.createdAt ?? c._createdAt);
                     const now = new Date();
                     return createdAt.getMonth() === now.getMonth() && 
                            createdAt.getFullYear() === now.getFullYear();
@@ -160,7 +160,7 @@ export default async function QuestionsPage() {
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="text-xs">
                         <Clock className="w-3 h-3 mr-1" />
-                        {formatDistanceToNow(new Date(community.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(community.createdAt ?? community._createdAt), { addSuffix: true })}
                       </Badge>
                       <div className="flex items-center space-x-1">
                         <Eye className="w-3 h-3 text-gray-400" />
@@ -268,7 +268,7 @@ export default async function QuestionsPage() {
                     <div className="flex items-center justify-between">
                       <Badge variant="outline" className="text-xs">
                         <Clock className="w-3 h-3 mr-1" />
-                        {formatDistanceToNow(new Date(community.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(community.createdAt ?? community._createdAt), { addSuffix: true })}
                       </Badge>
                       <div className="flex items-center space-x-1">
                         <Eye className="w-3 h-3 text-gray-400" />

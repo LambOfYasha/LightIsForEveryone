@@ -1,7 +1,7 @@
 "use client"
 
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/nextjs"
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import { Button } from "../ui/button"
 import { ChevronLeftIcon, MenuIcon, Shield, Users, UserCheck, BookOpen } from "lucide-react"
 import { useSidebar } from "../ui/sidebar"
@@ -13,14 +13,12 @@ import { MobileSidebar } from "../mobile-sidebar"
 // Use the simple notification icon for now
 import NotificationIcon from "./simple-notification-icon";
 
+const subscribe = () => () => {};
+
 function Header() {
     const {user} = useUser()
     const {toggleSidebar, open} = useSidebar()
-    const [mounted, setMounted] = useState(false)
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
+    const mounted = useSyncExternalStore(subscribe, () => true, () => false)
 
   return (
 <header className="flex items-center justify-between p-3 sm:p-4 border-b relative z-50 bg-background">

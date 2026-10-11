@@ -15,7 +15,7 @@ interface ClearAllFavoritesButtonProps {
 
 export default function ClearAllFavoritesButton({ 
   className = '',
-  size = 'default',
+  size = 'md',
   variant = 'outline',
   children
 }: ClearAllFavoritesButtonProps) {
@@ -46,7 +46,7 @@ export default function ClearAllFavoritesButton({
   return (
     <Button
       variant={variant}
-      size={size}
+      size={size === "md" ? "default" : size}
       onClick={handleClearAll}
       disabled={isLoading}
       className={className}

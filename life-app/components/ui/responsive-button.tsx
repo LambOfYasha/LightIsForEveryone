@@ -1,8 +1,8 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { Button, ButtonProps } from "./button"
+import { Button } from "./button"
 
-interface ResponsiveButtonProps extends ButtonProps {
+interface ResponsiveButtonProps extends React.ComponentProps<typeof Button> {
   mobileText?: string
   desktopText?: string
   mobileIcon?: React.ReactNode

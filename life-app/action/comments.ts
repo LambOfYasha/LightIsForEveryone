@@ -324,6 +324,7 @@ export async function getComments(
             *[_type == "comment" && post._ref == $postId && postType == $postType && !defined(parentComment) && (isDeleted == false || isDeleted == null)] | order(createdAt asc) {
                 _id,
                 content,
+                "authorRole": coalesce(author->role, "guest"),
                 createdAt,
                 updatedAt,
                 likes,
@@ -336,6 +337,7 @@ export async function getComments(
                 "replies": *[_type == "comment" && parentComment._ref == ^._id && (isDeleted == false || isDeleted == null)] | order(createdAt asc) {
                     _id,
                     content,
+                "authorRole": coalesce(author->role, "guest"),
                     createdAt,
                     updatedAt,
                     likes,
@@ -348,6 +350,7 @@ export async function getComments(
                     "replies": *[_type == "comment" && parentComment._ref == ^._id && (isDeleted == false || isDeleted == null)] | order(createdAt asc) {
                         _id,
                         content,
+                "authorRole": coalesce(author->role, "guest"),
                         createdAt,
                         updatedAt,
                         likes,

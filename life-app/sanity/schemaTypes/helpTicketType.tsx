@@ -1,4 +1,4 @@
-import { defineField, defineType, ValidationRule } from "sanity";
+import { defineField, defineType } from "sanity";
 import { HelpCircle } from "lucide-react";
 
 export const helpTicketType = defineType({
@@ -12,7 +12,7 @@ export const helpTicketType = defineType({
       title: 'Title',
       type: 'string',
       description: 'Brief description of the issue',
-      validation: (Rule: ValidationRule) => Rule.required().min(5).max(200),
+      validation: (Rule) => Rule.required().min(5).max(200),
     }),
     defineField({
       name: 'description',
@@ -20,7 +20,7 @@ export const helpTicketType = defineType({
       type: 'text',
       description: 'Detailed description of the issue',
       rows: 4,
-      validation: (Rule: ValidationRule) => Rule.required().min(10).max(2000),
+      validation: (Rule) => Rule.required().min(10).max(2000),
     }),
     defineField({
       name: 'category',
@@ -38,7 +38,7 @@ export const helpTicketType = defineType({
         ],
         layout: 'radio'
       },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'status',
@@ -55,7 +55,7 @@ export const helpTicketType = defineType({
         layout: 'radio'
       },
       initialValue: 'open',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'priority',
@@ -72,28 +72,28 @@ export const helpTicketType = defineType({
         layout: 'radio'
       },
       initialValue: 'medium',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'userId',
       title: 'User ID',
       type: 'string',
       description: 'Clerk user ID of the ticket creator',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'userEmail',
       title: 'User Email',
       type: 'string',
       description: 'Email address of the ticket creator',
-      validation: (Rule: ValidationRule) => Rule.required().email(),
+      validation: (Rule) => Rule.required().email(),
     }),
     defineField({
       name: 'userName',
       title: 'User Name',
       type: 'string',
       description: 'Display name of the ticket creator',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'adminResponse',
@@ -114,7 +114,7 @@ export const helpTicketType = defineType({
       type: 'datetime',
       description: 'When the ticket was created',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',
@@ -122,7 +122,7 @@ export const helpTicketType = defineType({
       type: 'datetime',
       description: 'When the ticket was last updated',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'isDeleted',

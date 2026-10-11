@@ -48,6 +48,7 @@ interface SearchResult {
   publishedAt?: string;
   isApproved?: boolean;
   postType?: string;
+  post?: { _id: string; title: string; slug: string };
 }
 
 export function SearchForm() {

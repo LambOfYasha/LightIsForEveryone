@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { PlayCircle } from "lucide-react";
 
 export const lessonType = defineType({
@@ -12,7 +12,7 @@ export const lessonType = defineType({
       title: 'Title',
       type: 'string',
       description: 'The title of the lesson',
-      validation: (Rule: ValidationRule) => Rule.required().min(3).max(200),
+      validation: (Rule) => Rule.required().min(3).max(200),
     }),
     defineField({
       name: 'slug',
@@ -22,7 +22,7 @@ export const lessonType = defineType({
       options: {
         source: 'title',
       },
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'description',
@@ -30,14 +30,14 @@ export const lessonType = defineType({
       type: 'text',
       description: 'A brief description of the lesson',
       rows: 3,
-      validation: (Rule: ValidationRule) => Rule.max(1000),
+      validation: (Rule) => Rule.max(1000),
     }),
     defineField({
       name: 'videoId',
       title: 'YouTube Video ID',
       type: 'string',
       description: 'The YouTube video ID (e.g. "dQw4w9WgXcQ" from https://youtube.com/watch?v=dQw4w9WgXcQ)',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'category',
@@ -45,7 +45,7 @@ export const lessonType = defineType({
       type: 'reference',
       to: [{type: 'lessonCategory'}],
       description: 'The category this lesson belongs to',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'tags',
@@ -88,7 +88,7 @@ export const lessonType = defineType({
       type: 'datetime',
       description: 'When this lesson was created',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',
@@ -102,7 +102,7 @@ export const lessonType = defineType({
       type: 'number',
       description: 'Number of views this lesson has received',
       initialValue: 0,
-      validation: (Rule: ValidationRule) => Rule.min(0),
+      validation: (Rule) => Rule.min(0),
     }),
   ],
   preview: {

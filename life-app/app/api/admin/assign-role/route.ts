@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser();
     
     // Check if user has permission to assign roles (Senior Teachers and up)
-    if (!user.role || !['senior_teacher', 'lead_teacher', 'dev', 'admin'].includes(user.role)) {
+    if (!user || !user.role || !['senior_teacher', 'lead_teacher', 'dev', 'admin'].includes(user.role)) {
       return NextResponse.json(
         { error: 'Insufficient permissions to assign roles' }, 
         { status: 403 }

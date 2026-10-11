@@ -1,3 +1,7 @@
+import type { Metadata } from "next";
+import { adminClient } from "@/sanity/lib/adminClient";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { formatDistanceToNow } from "date-fns";
 import { notFound } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 import { defineQuery } from "groq";
@@ -11,7 +15,8 @@ import {
   ArrowLeft,
   Eye,
   CheckCircle,
-  Clock
+  Clock,
+  ThumbsUp
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";

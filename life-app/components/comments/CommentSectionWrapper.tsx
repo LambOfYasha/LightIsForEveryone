@@ -12,6 +12,7 @@ interface Comment {
     username: string;
     imageURL?: string;
   };
+  authorRole: string;
   createdAt: string;
   updatedAt?: string;
   likes: number;
@@ -151,7 +152,6 @@ export default function CommentSectionWrapper({
       onAddComment={handleAddComment}
       onEditComment={handleEditComment}
       onDeleteComment={handleDeleteComment}
-      onLikeComment={handleLikeComment}
     />
   );
 } 

@@ -76,7 +76,7 @@ export default function TestRichEditorPage() {
                   <pre className="text-xs bg-gray-100 p-4 rounded overflow-x-auto max-h-96 overflow-y-auto">
                     {(() => {
                       // Simulate the same processing as RichContentRenderer
-                      let processed = content
+                      const processed = content
                         .replace(/&lt;/g, '<')
                         .replace(/&gt;/g, '>')
                         .replace(/&amp;/g, '&')

@@ -118,7 +118,7 @@ export async function getUserAnalytics(): Promise<UserAnalytics | { error: strin
     const averageCommentLength = comments.length > 0 ? Math.round(totalCommentLength / comments.length) : 0;
 
     // Calculate most active month for posts
-    const postMonths = posts.map((post: any) => new Date(post.publishedAt).getMonth());
+    const postMonths: number[] = posts.map((post: any) => new Date(post.publishedAt).getMonth());
     const mostActivePostMonth = postMonths.length > 0 
       ? new Date(2024, postMonths.reduce((a: number, b: number) => 
           postMonths.filter(v => v === a).length >= postMonths.filter(v => v === b).length ? a : b
@@ -126,7 +126,7 @@ export async function getUserAnalytics(): Promise<UserAnalytics | { error: strin
       : 'No activity';
 
     // Calculate most active month for comments
-    const commentMonths = comments.map((comment: any) => new Date(comment.publishedAt).getMonth());
+    const commentMonths: number[] = comments.map((comment: any) => new Date(comment.publishedAt).getMonth());
     const mostActiveCommentMonth = commentMonths.length > 0 
       ? new Date(2024, commentMonths.reduce((a: number, b: number) => 
           commentMonths.filter(v => v === a).length >= commentMonths.filter(v => v === b).length ? a : b

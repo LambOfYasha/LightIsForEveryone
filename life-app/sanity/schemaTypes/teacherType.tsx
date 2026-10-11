@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { GraduationCapIcon } from "lucide-react";
 import Image from "next/image";
 
@@ -13,19 +13,19 @@ export const teacherType = defineType({
       title: 'Clerk ID',
       type: 'string',
       description: 'The Clerk user ID',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'username',
       title: 'Username',
       type: 'string',
-      validation: (Rule: ValidationRule) => Rule.required().min(3).max(50),
+      validation: (Rule) => Rule.required().min(3).max(50),
     }),
     defineField({
       name: 'email',
       title: 'Email',
       type: 'string',
-      validation: (Rule: ValidationRule) => Rule.required().email(),
+      validation: (Rule) => Rule.required().email(),
     }),
     defineField({
       name: 'imageURL',
@@ -48,7 +48,7 @@ export const teacherType = defineType({
         layout: 'radio'
       },
       initialValue: 'teacher',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'specializations',
@@ -63,7 +63,7 @@ export const teacherType = defineType({
       type: 'datetime',
       description: 'When the teacher joined',
       initialValue: new Date().toISOString(),
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'isReported',

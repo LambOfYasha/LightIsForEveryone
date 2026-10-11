@@ -1,4 +1,4 @@
-import {defineField, defineType, ValidationRule} from "sanity";
+import {defineField, defineType} from "sanity";
 import { HeartIcon, HeartOffIcon } from "lucide-react";
 
 export const favoriteType = defineType({
@@ -13,7 +13,7 @@ export const favoriteType = defineType({
       type: 'reference',
       to: [{type: 'user'}, {type: 'teacher'}],
       description: 'The user who saved this post',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'post',
@@ -21,7 +21,7 @@ export const favoriteType = defineType({
       type: 'reference',
       to: [{type: 'post'}, {type: 'blog'}, {type: 'communityQuestion'}],
       description: 'The post, blog, or community response that was saved',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'commentPath',
@@ -34,7 +34,7 @@ export const favoriteType = defineType({
       title: 'Saved At',
       type: 'datetime',
       description: 'When the user saved this post',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'isActive',

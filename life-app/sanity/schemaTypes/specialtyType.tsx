@@ -1,4 +1,4 @@
-import { defineField, defineType, ValidationRule } from "sanity";
+import { defineField, defineType } from "sanity";
 import { BookOpen } from "lucide-react";
 
 export const specialtyType = defineType({
@@ -12,7 +12,7 @@ export const specialtyType = defineType({
       title: 'Name',
       type: 'string',
       description: 'The name of the specialty',
-      validation: (Rule: ValidationRule) => Rule.required().min(2).max(100),
+      validation: (Rule) => Rule.required().min(2).max(100),
     }),
     defineField({
       name: 'description',
@@ -26,7 +26,7 @@ export const specialtyType = defineType({
       title: 'Color',
       type: 'string',
       description: 'Color code for the specialty (hex format)',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
       initialValue: '#3B82F6',
     }),
     defineField({
@@ -41,7 +41,7 @@ export const specialtyType = defineType({
       title: 'Created At',
       type: 'datetime',
       description: 'When this specialty was created',
-      validation: (Rule: ValidationRule) => Rule.required(),
+      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'updatedAt',
